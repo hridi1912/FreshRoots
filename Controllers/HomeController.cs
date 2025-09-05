@@ -1,5 +1,9 @@
 using FreshRoots.Models;
+
 using Microsoft.AspNetCore.Authorization;
+
+using FreshRoots.Services;
+
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -16,7 +20,11 @@ namespace FreshRoots.Controllers
         [Authorize(Roles = "Farmer")]
         public IActionResult FarmerHome()
         {
-            return View();
+            var products = InMemoryProductStore.Products
+            .OrderBy(p => p.Id)
+            .ToList();
+
+            return View(products);
         }
         [Authorize(Roles = "Buyer")]
         public IActionResult BuyerHome()
