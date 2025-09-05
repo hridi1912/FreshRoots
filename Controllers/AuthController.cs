@@ -31,7 +31,7 @@ namespace FreshRoots.Controllers
 
             var user = new ApplicationUser
             {
-                UserName = model.Email,
+                UserName = model.FullName,
                 Email = model.Email,
                 FullName = model.FullName,
                 UserType = model.Role

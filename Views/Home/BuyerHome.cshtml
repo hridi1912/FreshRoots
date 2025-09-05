@@ -372,7 +372,7 @@
             overflow-y: visible;
         }
 
-        }
+        
 
       
 
@@ -395,7 +395,7 @@
             margin-top: 10px;
         }
 
-        }
+        
     </style>
 </head>
 <body>
@@ -408,9 +408,9 @@
             <li><a href="#"><i class="fas fa-shopping-cart"></i> <span>My Orders</span></a></li>
             <li><a href="#"><i class="fas fa-heart"></i> <span>Wishlist</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i> <span>Track Delivery</span></a></li>
-            <li><a href="#"><i class="fas fa-user"></i> <span>Profile</span></a></li>
+            <li><a href="#profile"><i class="fas fa-user"></i> <span>Profile</span></a></li>
             <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
-            <li><a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+            @* <li><a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li> *@
         </ul>
     </div>
 
@@ -418,11 +418,11 @@
     <div class="main-content">
         <!-- Header -->
         <div class="header">
-            <h3>Welcome Back, Sarah!</h3>
+            <h3>Welcome Back!</h3>
             <div class="user-info">
                 <div class="user-avatar">SJ</div>
                 <div>
-                    <div>Sarah Johnson</div>
+                    <div>@User.Identity.Name</div>
                     <small class="text-muted">Premium Member</small>
                 </div>
             </div>
@@ -632,6 +632,140 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // ===== PROFILE FORM HANDLING =====
+    function setupProfileFormHandlers() {
+        // Handle profile form submission
+        const profileForm = document.getElementById('profileForm');
+        if (profileForm) {
+            profileForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await submitProfileForm(this);
+            });
+        }
+
+        // Handle change password button
+        const changePasswordBtn = document.querySelector('.change-password-btn');
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', function() {
+                alert('Change password functionality would go here');
+            });
+        }
+    }
+
+    // AJAX form submission
+    async function submitProfileForm(form) {
+        if (!validateProfileForm(form)) return;
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+        submitBtn.disabled = true;
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.text();
+                
+                // Replace the form with the updated content
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = result;
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = tempDiv.innerHTML;
+                
+                // Re-setup event handlers for the new form
+                setupProfileFormHandlers();
+            } else {
+                alert('Error updating profile. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error updating profile. Please try again.');
+        } finally {
+            // Restore button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    }
+
+    // Form validation
+    function validateProfileForm(form) {
+        const email = form.querySelector('input[name="Email"]');
+        const fullName = form.querySelector('input[name="FullName"]');
+        
+        // Null check first
+        if (!email || !fullName) {
+            alert('Form fields not found');
+            return false;
+        }
+        
+        if (!email.value || !fullName.value) {
+            alert('Please fill in all required fields');
+            return false;
+        }
+        
+       
+        return true;
+    }
+
+    // ===== PROFILE LOADING =====
+    async function loadProfile() {
+        try {
+            const response = await fetch('/Profile/ProfilePartial');
+            if (response.ok) {
+                const content = await response.text();
+                document.querySelector('.main-content').innerHTML = content;
+
+                // Update active menu item
+                document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.querySelector('.sidebar-menu a[href="#profile"]').classList.add('active');
+                
+                // Setup form handlers after profile loads
+                setTimeout(setupProfileFormHandlers, 100);
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+        }
+    }
+
+    function loadDashboard() {
+        window.location.reload();
+    }
+
+    // ===== INITIAL SETUP =====
+    document.addEventListener('DOMContentLoaded', function() {
+        // Profile link
+        const profileLink = document.querySelector('.sidebar-menu a[href="#profile"]');
+        if (profileLink) {
+            profileLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                loadProfile();
+            });
+        }
+
+        // Other sidebar links
+        const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"])');
+        otherLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('This feature would load: ' + this.querySelector('span').textContent);
+            });
+        });
+
+        // Initial setup for any forms on page load
+        setupProfileFormHandlers();
+    });
+</script>
 </body>
 </html>

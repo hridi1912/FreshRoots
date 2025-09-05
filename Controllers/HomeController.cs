@@ -1,5 +1,9 @@
 using FreshRoots.Models;
+
+using Microsoft.AspNetCore.Authorization;
+
 using FreshRoots.Services;
+
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -13,6 +17,7 @@ namespace FreshRoots.Controllers
         }
 
         // Farmer dashboard homepage
+        [Authorize(Roles = "Farmer")]
         public IActionResult FarmerHome()
         {
             var products = InMemoryProductStore.Products
@@ -21,6 +26,7 @@ namespace FreshRoots.Controllers
 
             return View(products);
         }
+        [Authorize(Roles = "Buyer")]
         public IActionResult BuyerHome()
         {
             return View();
