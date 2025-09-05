@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using FreshRoots.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace FreshRoots.Controllers
 {
@@ -12,10 +13,12 @@ namespace FreshRoots.Controllers
         }
 
         // Farmer dashboard homepage
+        [Authorize(Roles = "Farmer")]
         public IActionResult FarmerHome()
         {
             return View();
         }
+        [Authorize(Roles = "Buyer")]
         public IActionResult BuyerHome()
         {
             return View();
