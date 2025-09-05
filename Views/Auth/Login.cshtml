@@ -1,5 +1,6 @@
-﻿@{
-    ViewData["Title"] = "Register - FreshRoots";
+﻿@model FreshRoots.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Login - FreshRoots";
     Layout = null;
 }
 <!DOCTYPE html>
@@ -439,11 +440,13 @@
                 }
                 @if (TempData["Message"] != null)
                 {
-                    <div class="alert alert-success">@TempData["Message"]</div>
+                    <div class="alert alert-success">
+                        @TempData["Message"]
+                    </div>
                 }
 
                 <!-- Role Selector -->
-                <div class="mb-4">
+                @* <div class="mb-4">
                     <label class="form-label">I am logging in as a:</label>
                     <div class="role-selector">
                         <div class="role-option selected" data-role="Buyer">
@@ -462,7 +465,7 @@
                         </div>
                     </div>
                     <input type="hidden" name="role" id="selectedRole" value="Buyer" required />
-                </div>
+                </div> *@
 
                 <div class="social-login">
                     <button class="social-btn google">
@@ -479,40 +482,40 @@
                     <span class="divider-text">or use email</span>
                 </div>
 
-                <form method="post" asp-action="Login">
+                <form asp-action="Login" method="post">
+                    @Html.AntiForgeryToken()
+                    <!-- Role Selector -->
+                    <div class="role-selector">
+                        <div class="role-option selected" data-role="Buyer">
+                            <div class="role-icon"><i class="fas fa-shopping-basket"></i></div>
+                            Buyer
+                        </div>
+                        <div class="role-option" data-role="Farmer">
+                            <div class="role-icon"><i class="fas fa-tractor"></i></div>
+                            Farmer
+                        </div>
+                    </div>
                     <input type="hidden" name="role" id="loginRole" value="Buyer" />
 
                     <div class="mb-3">
-                        <label class="form-label">Email Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                            <input type="email" name="email" class="form-control" placeholder="your.email@example.com" required />
-                        </div>
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                            <input type="password" name="password" class="form-control" placeholder="Enter your password" required />
-                        </div>
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" type="password" class="form-control" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 
-                    <div class="remember-forgot">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="rememberMe">
-                            <label class="form-check-label" for="rememberMe">
-                                Remember me
-                            </label>
-                        </div>
-                        <a href="/Auth/ForgotPassword" class="forgot-password">Forgot password?</a>
+                    <div class="form-check mb-3">
+                        <input asp-for="RememberMe" class="form-check-input" />
+                        <label asp-for="RememberMe" class="form-check-label"></label>
                     </div>
 
-                    <button type="submit" class="btn btn-success w-100 py-3 mb-3">
-                        <i class="fas fa-sign-in-alt me-2"></i>Sign In
-                    </button>
+                    <button type="submit" class="btn btn-success">Sign In</button>
                 </form>
-
                 <p class="text-center mb-0">
                     Don't have an account? <a href="/Auth/Register" class="signup-link">Sign Up Now</a>
                 </p>

@@ -1,49 +1,118 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FreshRoots.Models;
+using FreshRoots.ViewModels;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FreshRoots.Controllers
 {
     public class AuthController : Controller
     {
-        public IActionResult Login()
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        public AuthController(UserManager<ApplicationUser> userManager,
+                              SignInManager<ApplicationUser> signInManager,
+                              RoleManager<IdentityRole> roleManager)
         {
-            return View();
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _roleManager = roleManager;
         }
 
-        // POST: /Auth/Login
+        [HttpGet]
+        public IActionResult Register() => View();
+
         [HttpPost]
-        public IActionResult Login(string email, string password)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            // TODO: integrate with ASP.NET Identity
-            if (email == "test@freshroots.com" && password == "123456")
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = new ApplicationUser
             {
-                TempData["Message"] = "Login successful!";
-                return RedirectToAction("Index", "Home");
+                UserName = model.Email,
+                Email = model.Email,
+                FullName = model.FullName,
+                UserType = model.Role
+            };
+
+            var result = await _userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                // Ensure the role exists
+                if (!await _roleManager.RoleExistsAsync(model.Role))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(model.Role));
+                }
+
+                // Assign role to the user
+                await _userManager.AddToRoleAsync(user, model.Role);
+
+                TempData["Message"] = "Registration successful! Please login.";
+                return RedirectToAction("Login");
             }
 
-            ViewBag.Error = "Invalid credentials!";
-            return View();
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError("", error.Description);
+            }
+
+            return View(model);
         }
 
-        // GET: /Auth/Register
-        public IActionResult Register()
-        {
-            return View();
-        }
+        [HttpGet]
+        public IActionResult Login() => View();
 
-        // POST: /Auth/Register
         [HttpPost]
-        public IActionResult Register(string name, string email, string password, string role)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            // TODO: save to database with Identity
-            TempData["Message"] = $"Account created for {name} as {role}";
-            return RedirectToAction("Login");
+            if (!ModelState.IsValid)
+                return View(model);
+
+            // Find the user by email
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "Invalid login attempt.");
+                return View(model);
+            }
+
+            // Optional: verify role if you have a role selector in the login form
+            var roleFromForm = Request.Form["role"].ToString(); // hidden input for role
+            if (!string.IsNullOrEmpty(roleFromForm) && !await _userManager.IsInRoleAsync(user, roleFromForm))
+            {
+                ModelState.AddModelError("", $"User is not registered as {roleFromForm}.");
+                return View(model);
+            }
+
+            // Sign in
+            var result = await _signInManager.PasswordSignInAsync(
+                user.UserName, // Username is required
+                model.Password,
+                model.RememberMe,
+                lockoutOnFailure: false
+            );
+
+            if (result.Succeeded)
+            {
+                // Redirect based on role
+                if (await _userManager.IsInRoleAsync(user, "Farmer"))
+                    return RedirectToAction("Index", "Home");
+                else
+                    return RedirectToAction("Index", "Home");
+            }
+
+            ModelState.AddModelError("", "Invalid login attempt.");
+            return View(model);
         }
 
-        // GET: /Auth/Logout
-        public IActionResult Logout()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
         {
-            // TODO: use SignInManager.SignOutAsync() with Identity
-            TempData["Message"] = "Logged out successfully!";
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
         }
     }
