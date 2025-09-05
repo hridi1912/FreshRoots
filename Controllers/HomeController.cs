@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using FreshRoots.Models;
+using FreshRoots.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace FreshRoots.Controllers
 {
@@ -14,7 +15,11 @@ namespace FreshRoots.Controllers
         // Farmer dashboard homepage
         public IActionResult FarmerHome()
         {
-            return View();
+            var products = InMemoryProductStore.Products
+            .OrderBy(p => p.Id)
+            .ToList();
+
+            return View(products);
         }
         public IActionResult BuyerHome()
         {

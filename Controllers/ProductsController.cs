@@ -1,6 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using FreshRoots.Models;
-using System.Collections.Generic;
+using FreshRoots.Services;
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,106 +13,159 @@ namespace FreshRoots.Controllers
 {
     public class ProductsController : Controller
     {
-        // Mock data - Replace this with database context later
-        private static List<Product> _products = new List<Product>
-        {
-            new Product
-            {
-                Id = 1,
-                Name = "Organic Tomatoes",
-                Description = "Fresh organic tomatoes, harvested yesterday",
-                Price = 40,
-                StockQuantity = 20,
-                ImageUrl = "https://images.unsplash.com/photo-1561136594-7f68413baa99?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHRvbWF0b3xlbnwwfHwwfHx8MA%3D%3D",
-                Category = "Vegetables",
-                HarvestDate = System.DateTime.Now.AddDays(-1),
-                FarmerProfile = new FarmerProfile { FarmName = "Green Valley Farm", Certification = "Organic" }
-            },
-            new Product
-            {
-                Id = 2,
-                Name = "Fresh Apples",
-                Description = "Sweet and crunchy apples from our orchard",
-                Price = 240,
-                StockQuantity = 15,
-                ImageUrl = "https://images.unsplash.com/photo-1576179636333-f13b174b3c9a?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGFwcGxlJTIwb3JjaGFyZHxlbnwwfHwwfHx8MA%3D%3D",
-                Category = "Fruits",
-                HarvestDate = System.DateTime.Now.AddDays(-2),
-                FarmerProfile = new FarmerProfile { FarmName = "Sunny Orchard", Certification = "Local" }
-            },
-            new Product
-            {
-                Id = 3,
-                Name = "Free-Range Eggs",
-                Description = "Farm fresh eggs from free-range chickens",
-                Price = 140,
-                StockQuantity = 12,
-                ImageUrl = "https://images.unsplash.com/photo-1648141499246-97a0eb56c2fd?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZWdnJTIwZmFybXxlbnwwfHwwfHx8MA%3D%3D",
-                Category = "Dairy",
-                HarvestDate = System.DateTime.Now.AddDays(-1),
-                FarmerProfile = new FarmerProfile { FarmName = "Happy Hens Farm", Certification = "Free-Range" }
-            },
-            new Product
-            {
-                Id = 4,
-                Name = "Organic Carrots",
-                Description = "Sweet organic carrots, perfect for cooking",
-                Price = 60,
-                StockQuantity = 0, // Out of stock
-                ImageUrl = "https://images.unsplash.com/photo-1639086495429-d60e72c53c81?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGNhcnJvdHN8ZW58MHx8MHx8fDA%3D",
-                Category = "Vegetables",
-                HarvestDate = System.DateTime.Now.AddDays(-3),
-                FarmerProfile = new FarmerProfile { FarmName = "Green Valley Farm", Certification = "Organic" }
-            }
-        };
+        private readonly IWebHostEnvironment _env;
 
-        // GET: /Products
+        public ProductsController(IWebHostEnvironment env)
+        {
+            _env = env;
+        }
+
+        // ----------------- PUBLIC -----------------
+        [AllowAnonymous]
         public IActionResult Index(string searchString, string categoryFilter)
         {
-            // Start with all products
-            var products = _products.AsQueryable();
+            var products = InMemoryProductStore.Products.AsQueryable();
 
-            // Search by product name
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                products = products.Where(p => p.Name.ToLower().Contains(searchString.ToLower()));
-            }
+            if (!string.IsNullOrWhiteSpace(searchString))
+                products = products.Where(p => p.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase));
 
-            // Filter by category
-            if (!string.IsNullOrEmpty(categoryFilter))
-            {
+            if (!string.IsNullOrWhiteSpace(categoryFilter))
                 products = products.Where(p => p.Category == categoryFilter);
-            }
 
-            // Pass the search/filter values back to the view to keep them in the form
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentCategory"] = categoryFilter;
-
-            // Get distinct categories for the dropdown filter
-            ViewBag.Categories = _products
-                .Select(p => p.Category)
-                .Distinct()
-                .ToList();
+            ViewBag.Categories = InMemoryProductStore.Products.Select(p => p.Category).Distinct().ToList();
 
             return View(products.ToList());
         }
 
-        // GET: /Products/Details/5
+        [AllowAnonymous]
         public IActionResult Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var product = _products.FirstOrDefault(p => p.Id == id);
-
-            if (product == null)
-            {
-                return NotFound();
-            }
-
+            if (id is null) return NotFound();
+            var product = InMemoryProductStore.Products.FirstOrDefault(p => p.Id == id);
+            if (product is null) return NotFound();
             return View(product);
+        }
+
+        // ----------------- FARMER -----------------
+        [Authorize(Roles = "Farmer")]
+        public IActionResult Manage()
+            => View(InMemoryProductStore.Products.OrderByDescending(p => p.Id).ToList());
+
+        [Authorize(Roles = "Farmer")]
+        public IActionResult Create()
+            => View(new Product());
+
+        [HttpPost]
+        [Authorize(Roles = "Farmer")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Product model, IFormFile? imageFile)
+        {
+            if (!ModelState.IsValid) return View(model);
+
+            if (imageFile != null && imageFile.Length > 0)
+                model.ImageUrl = await SaveImage(imageFile);
+
+            model.Id = InMemoryProductStore.Products.Any()
+                ? InMemoryProductStore.Products.Max(p => p.Id) + 1
+                : 1;
+
+            InMemoryProductStore.Products.Add(model);
+
+            TempData["Msg"] = "Product created.";
+            return RedirectToAction(nameof(Manage));
+        }
+
+        [Authorize(Roles = "Farmer")]
+        public IActionResult Edit(int? id)
+        {
+            if (id is null) return NotFound();
+            var product = InMemoryProductStore.Products.FirstOrDefault(p => p.Id == id);
+            if (product is null) return NotFound();
+            return View(product);
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Farmer")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Product model, IFormFile? imageFile)
+        {
+            if (id != model.Id) return BadRequest();
+            if (!ModelState.IsValid) return View(model);
+
+            var product = InMemoryProductStore.Products.FirstOrDefault(p => p.Id == id);
+            if (product is null) return NotFound();
+
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+                {
+                    var oldFsPath = ToPhysicalPath(product.ImageUrl);
+                    if (System.IO.File.Exists(oldFsPath))
+                        System.IO.File.Delete(oldFsPath);
+                }
+                product.ImageUrl = await SaveImage(imageFile);
+            }
+
+            product.Name = model.Name;
+            product.Description = model.Description;
+            product.Price = model.Price;
+            product.StockQuantity = model.StockQuantity;
+            product.Category = model.Category;
+            product.HarvestDate = model.HarvestDate;
+            product.FarmerProfile ??= new FarmerProfile();
+            product.FarmerProfile.FarmName = model.FarmerProfile?.FarmName;
+            product.FarmerProfile.Certification = model.FarmerProfile?.Certification;
+
+            TempData["Msg"] = "Product updated.";
+            return RedirectToAction(nameof(Manage));
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Farmer")]
+        [ValidateAntiForgeryToken]
+        public IActionResult Delete(int id)
+        {
+            var product = InMemoryProductStore.Products.FirstOrDefault(p => p.Id == id);
+            if (product is null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(product.ImageUrl))
+            {
+                var oldFsPath = ToPhysicalPath(product.ImageUrl);
+                if (System.IO.File.Exists(oldFsPath))
+                    System.IO.File.Delete(oldFsPath);
+            }
+
+            InMemoryProductStore.Products.Remove(product);
+            TempData["Msg"] = "Product deleted.";
+            return RedirectToAction(nameof(Manage));
+        }
+
+        // ----------------- Helpers -----------------
+        private async Task<string> SaveImage(IFormFile imageFile)
+        {
+            var ext = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+            var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+            if (!allowed.Contains(ext))
+                throw new Exception("Only JPG, JPEG, PNG, WEBP or GIF files are allowed.");
+
+            var uploadsRoot = Path.Combine(_env.WebRootPath!, "images", "products");
+            Directory.CreateDirectory(uploadsRoot);
+
+            var fileName = $"{Guid.NewGuid():N}{ext}";
+            var fullPath = Path.Combine(uploadsRoot, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+                await imageFile.CopyToAsync(stream);
+
+            return $"/images/products/{fileName}";
+        }
+
+        private string ToPhysicalPath(string relativeWebPath)
+        {
+            var path = relativeWebPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            return Path.Combine(_env.WebRootPath ?? string.Empty, path);
         }
     }
 }
