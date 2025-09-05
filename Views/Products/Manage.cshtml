@@ -1,0 +1,59 @@
+﻿@model IEnumerable<FreshRoots.Models.Product>
+@{
+    ViewData["Title"] = "Manage Products";
+}
+
+<div class="container mt-4">
+    @if (TempData["Msg"] is string msg)
+    {
+        <div class="alert alert-success">@msg</div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>My Products</h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fa fa-plus me-1"></i> Add Product
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th class="text-end">Price</th>
+                    <th class="text-end">Stock</th>
+                    <th>Farm</th>
+                    <th style="width:180px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td><img src="@p.ImageUrl" alt="@p.Name" style="width:60px;height:60px;object-fit:cover" class="rounded" /></td>
+                        <td>@p.Name</td>
+                        <td>@p.Category</td>
+                        <td class="text-end">৳@p.Price.ToString("N2")</td>
+                        <td class="text-end">@p.StockQuantity</td>
+                        <td>@p.FarmerProfile?.FarmName</td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="fa fa-edit"></i> Edit
+                            </a>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@p.Id" />
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete @p.Name?');">
+                                    <i class="fa fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
