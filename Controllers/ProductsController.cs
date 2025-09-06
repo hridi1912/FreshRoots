@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// Controllers/ProductsController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using FreshRoots.Data;
 using FreshRoots.Models;
-using FreshRoots.Services;
 using System;
 using System.IO;
 using System.Linq;
@@ -14,48 +16,64 @@ namespace FreshRoots.Controllers
     public class ProductsController : Controller
     {
         private readonly IWebHostEnvironment _env;
+        private readonly ApplicationDbContext _db;
 
-        public ProductsController(IWebHostEnvironment env)
+        public ProductsController(IWebHostEnvironment env, ApplicationDbContext db)
         {
             _env = env;
+            _db = db;
         }
 
         // ----------------- PUBLIC -----------------
         [AllowAnonymous]
-        public IActionResult Index(string searchString, string categoryFilter)
+        public async Task<IActionResult> Index(string? searchString, string? categoryFilter)
         {
-            var products = InMemoryProductStore.Products.AsQueryable();
+            var query = _db.Products.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchString))
-                products = products.Where(p => p.Name.Contains(searchString, StringComparison.OrdinalIgnoreCase));
+                query = query.Where(p => EF.Functions.Like(p.Name, $"%{searchString}%"));
 
             if (!string.IsNullOrWhiteSpace(categoryFilter))
-                products = products.Where(p => p.Category == categoryFilter);
+                query = query.Where(p => p.Category == categoryFilter);
+
+            var list = await query
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
 
             ViewData["CurrentFilter"] = searchString;
             ViewData["CurrentCategory"] = categoryFilter;
-            ViewBag.Categories = InMemoryProductStore.Products.Select(p => p.Category).Distinct().ToList();
 
-            return View(products.ToList());
+            var categories = await _db.Products
+                .AsNoTracking()
+                .Select(p => p.Category)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            ViewBag.Categories = categories;
+
+            return View(list);
         }
 
         [AllowAnonymous]
-        public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
             if (id is null) return NotFound();
-            var product = InMemoryProductStore.Products.FirstOrDefault(p => p.Id == id);
+            var product = await _db.Products.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
             if (product is null) return NotFound();
             return View(product);
         }
 
         // ----------------- FARMER -----------------
         [Authorize(Roles = "Farmer")]
-        public IActionResult Manage()
-            => View(InMemoryProductStore.Products.OrderByDescending(p => p.Id).ToList());
+        public async Task<IActionResult> Manage()
+        {
+            var items = await _db.Products.AsNoTracking().OrderByDescending(p => p.Id).ToListAsync();
+            return View(items);
+        }
 
         [Authorize(Roles = "Farmer")]
-        public IActionResult Create()
-            => View(new Product());
+        public IActionResult Create() => View(new Product());
 
         [HttpPost]
         [Authorize(Roles = "Farmer")]
@@ -67,21 +85,21 @@ namespace FreshRoots.Controllers
             if (imageFile != null && imageFile.Length > 0)
                 model.ImageUrl = await SaveImage(imageFile);
 
-            model.Id = InMemoryProductStore.Products.Any()
-                ? InMemoryProductStore.Products.Max(p => p.Id) + 1
-                : 1;
+            // ensure owned type isn’t null
+            model.FarmerProfile ??= new FarmerProfile();
 
-            InMemoryProductStore.Products.Add(model);
+            _db.Products.Add(model);
+            await _db.SaveChangesAsync();
 
             TempData["Msg"] = "Product created.";
             return RedirectToAction(nameof(Manage));
         }
 
         [Authorize(Roles = "Farmer")]
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
             if (id is null) return NotFound();
-            var product = InMemoryProductStore.Products.FirstOrDefault(p => p.Id == id);
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product is null) return NotFound();
             return View(product);
         }
@@ -94,7 +112,7 @@ namespace FreshRoots.Controllers
             if (id != model.Id) return BadRequest();
             if (!ModelState.IsValid) return View(model);
 
-            var product = InMemoryProductStore.Products.FirstOrDefault(p => p.Id == id);
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product is null) return NotFound();
 
             if (imageFile != null && imageFile.Length > 0)
@@ -114,9 +132,12 @@ namespace FreshRoots.Controllers
             product.StockQuantity = model.StockQuantity;
             product.Category = model.Category;
             product.HarvestDate = model.HarvestDate;
+
             product.FarmerProfile ??= new FarmerProfile();
             product.FarmerProfile.FarmName = model.FarmerProfile?.FarmName;
             product.FarmerProfile.Certification = model.FarmerProfile?.Certification;
+
+            await _db.SaveChangesAsync();
 
             TempData["Msg"] = "Product updated.";
             return RedirectToAction(nameof(Manage));
@@ -125,9 +146,9 @@ namespace FreshRoots.Controllers
         [HttpPost]
         [Authorize(Roles = "Farmer")]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var product = InMemoryProductStore.Products.FirstOrDefault(p => p.Id == id);
+            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product is null) return NotFound();
 
             if (!string.IsNullOrWhiteSpace(product.ImageUrl))
@@ -137,7 +158,9 @@ namespace FreshRoots.Controllers
                     System.IO.File.Delete(oldFsPath);
             }
 
-            InMemoryProductStore.Products.Remove(product);
+            _db.Products.Remove(product);
+            await _db.SaveChangesAsync();
+
             TempData["Msg"] = "Product deleted.";
             return RedirectToAction(nameof(Manage));
         }

@@ -11,9 +11,17 @@
 
     <div class="col-md-6">
         <label asp-for="Category" class="form-label"></label>
-        <input asp-for="Category" class="form-control" />
+        <select asp-for="Category" class="form-select">
+            <option value="">-- Select Category --</option>
+            <option value="Vegetables">Vegetables</option>
+            <option value="Fruits">Fruits</option>
+            <option value="Meat">Meat</option>
+            <option value="Dairy">Dairy</option>
+            <option value="Grains">Grains</option>
+        </select>
         <span asp-validation-for="Category" class="text-danger"></span>
     </div>
+
 
     <div class="col-12">
         <label asp-for="Description" class="form-label"></label>
