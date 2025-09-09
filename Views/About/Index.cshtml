@@ -1,0 +1,237 @@
+@{
+    ViewData["Title"] = "About Us";
+}
+
+<style>
+    :root {
+        --primary: #3a9949;
+        --dark: #1a1a1a; /* darker text */
+        --light: #f9f9f9;
+    }
+
+    .culture-card {
+        border: 2px solid var(--primary);
+        border-radius: 10px;
+        transition: transform 0.2s;
+        display: flex;
+        align-items: center; /* vertical center */
+        justify-content: center; /* horizontal center if needed */
+        text-align: center;
+        padding: 20px;
+        height: 100%;
+    }
+
+    .culture-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .culture-card h5 {
+        color: var(--primary);
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .culture-card p {
+        color: var(--dark); /* darker text */
+        font-weight: 600;
+    }
+
+    .section-spacing {
+        margin-top: 60px;
+        margin-bottom: 60px;
+    }
+</style>
+
+<div class="container section-spacing">
+    <h1 class="mb-5 text-center" style="color: var(--primary);">Our Culture and Values</h1>
+
+    <div class="row g-4 text-center">
+        <!-- Trust and Integrity -->
+        <div class="col-md-6">
+            <div class="card shadow-sm culture-card">
+                <div>
+                    <h5><i class="fas fa-handshake me-2"></i>Trust and Integrity</h5>
+                    <p>We want to build an environment in which mutual trust can develop and that allows us to discuss matters openly. 
+                        It gives us the confidence to admit when we are wrong and the courage to change. Integrity means that we are truthful and honest. 
+                        When faced with difficult decisions and hard choices, we do the right thing, even in the face of adversity.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Judgment -->
+        <div class="col-md-6">
+            <div class="card shadow-sm culture-card">
+                <div>
+                    <h5><i class="fas fa-lightbulb me-2"></i>Judgment</h5>
+                    <p>We want people to use their best judgment. It is the ability to combine personal qualities with relevant knowledge and experience to form opinions and make quick decisions. 
+                        We admire people who can make wise decisions despite ambiguity and can identify root causes, and not just emphasize on treating symptoms. While intuition is relevant, intuition validated by data is powerful.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Curiousness -->
+        <div class="col-md-6">
+            <div class="card shadow-sm culture-card">
+                <div>
+                    <h5><i class="fas fa-search me-2"></i>Curiousness</h5>
+                    <p>We see change as an opportunity to improve. We frequently push ourselves out of our comfort zone. Our learning mindset ensures we reflect and learn from our successes and failures. 
+                        We want to think that it is always “day 1” and do not get complacent. Want to learn and unlearn rapidly and eagerly and when required to operate outside of our comfort zone.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Courage -->
+        <div class="col-md-6">
+            <div class="card shadow-sm culture-card">
+                <div>
+                    <h5><i class="fas fa-shield-alt me-2"></i>Courage</h5>
+                    <p>We have the courage to think big and make it happen. We create and communicate bold direction and think big to serve our customers and inspire results. 
+                        Thinking big is often about taking risks and failing and we need all the courage to do so. We want people to say what they think, when it’s in the best interest of iFarmer, even if it is uncomfortable. 
+                        We believe it takes courage to be vulnerable, in search of truth.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Impact and Inclusiveness -->
+        <div class="col-md-6">
+            <div class="card shadow-sm culture-card">
+                <div>
+                    <h5><i class="fas fa-users me-2"></i>Impact and Inclusiveness</h5>
+                    <p>We believe that we are on the face of the Earth to create impact that will change the world not for just a few but for many no matter what their background, gender, religion be. 
+                        We admire people who see the world as it is and have the audacity to imagine the world as it could be. No level of individual excellence justifies undermining people. We believe in those who can elevate others.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Getting Things Done -->
+        <div class="col-md-6">
+            <div class="card shadow-sm culture-card">
+                <div>
+                    <h5><i class="fas fa-check-circle me-2"></i>Getting Things Done</h5>
+                    <p>We focus on the key outputs for our business and deliver them with the right quality and in a timely fashion. Despite setbacks, we rise to the occasion and deliver what is expected from us. 
+                        We want to focus on results over process and create new ideas that prove useful. If necessary, we challenge prevailing assumptions, and suggest better.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    /* FAQ Styles */
+    .accordion-button {
+        background-color: #f9f9f9; /* white background */
+        color: var(--primary); /* green text for question */
+        font-weight: 700;
+        border: 2px solid var(--primary);
+        border-radius: 8px;
+        margin-bottom: 10px; /* space between questions */
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: var(--primary); /* green background when expanded */
+        color: white; /* white text when expanded */
+    }
+
+    .accordion-body {
+        background-color: #f9f9f9; /* light gray/white background */
+        color: #222; /* dark text for answers */
+        font-weight: 600;
+        padding: 20px;
+    }
+
+    /* Extra spacing between FAQ and footer */
+    .faq-section {
+        margin-bottom: 80px;
+    }
+
+    /* Hover effect for question */
+    .accordion-button:hover {
+        background-color: var(--primary-dark);
+        color: white;
+    }
+</style>
+
+<!-- FAQ Section -->
+<div class="container faq-section">
+    <h2 class="mb-4 text-center" style="color: var(--primary); font-weight: 800;">Frequently Asked Questions</h2>
+
+    <div class="accordion" id="faqAccordion">
+        <!-- Question 1 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="faqHeading1">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1" aria-expanded="false" aria-controls="faqCollapse1">
+                    What is FreshRoots?
+                </button>
+            </h2>
+            <div id="faqCollapse1" class="accordion-collapse collapse" aria-labelledby="faqHeading1" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    FreshRoots is a platform that connects local farmers directly with consumers, providing fresh and organic produce while supporting sustainable farming practices.
+                </div>
+            </div>
+        </div>
+
+        <!-- Question 2 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="faqHeading2">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+                    How can I place an order?
+                </button>
+            </h2>
+            <div id="faqCollapse2" class="accordion-collapse collapse" aria-labelledby="faqHeading2" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    To place an order, sign up or log in as a Buyer, browse products, add them to your cart, and checkout. You can track your delivery from your account dashboard.
+                </div>
+            </div>
+        </div>
+
+        <!-- Question 3 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="faqHeading3">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+                    How do I become a Farmer on FreshRoots?
+                </button>
+            </h2>
+            <div id="faqCollapse3" class="accordion-collapse collapse" aria-labelledby="faqHeading3" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    To become a Farmer, sign up as a Farmer on the platform and submit your farm details. Once approved, you can add your products and start selling directly to consumers.
+                </div>
+            </div>
+        </div>
+
+        <!-- Question 4 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="faqHeading4">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4" aria-expanded="false" aria-controls="faqCollapse4">
+                    Can I return a product if I am not satisfied?
+                </button>
+            </h2>
+            <div id="faqCollapse4" class="accordion-collapse collapse" aria-labelledby="faqHeading4" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    Yes, FreshRoots allows returns within a specified period depending on the product. Please check the return policy on the product page or contact our support for assistance.
+                </div>
+            </div>
+        </div>
+
+        <!-- Question 5 -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="faqHeading5">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse5" aria-expanded="false" aria-controls="faqCollapse5">
+                    How do I contact customer support?
+                </button>
+            </h2>
+            <div id="faqCollapse5" class="accordion-collapse collapse" aria-labelledby="faqHeading5" data-bs-parent="#faqAccordion">
+                <div class="accordion-body">
+                    You can contact customer support via the "Contact" page in the navigation menu or email us at info@freshroots.com. Our team responds promptly to queries.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

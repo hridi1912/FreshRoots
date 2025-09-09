@@ -8,18 +8,40 @@
 
   <ItemGroup>
     <Compile Remove="Services\**" />
+    <Compile Remove="Views\NewFolder1\**" />
+    <Compile Remove="Views\NewFolder2\**" />
+    <Compile Remove="Views\NewFolder3\**" />
+    <Compile Remove="Views\NewFolder\**" />
     <Content Remove="Services\**" />
+    <Content Remove="Views\NewFolder1\**" />
+    <Content Remove="Views\NewFolder2\**" />
+    <Content Remove="Views\NewFolder3\**" />
+    <Content Remove="Views\NewFolder\**" />
     <EmbeddedResource Remove="Services\**" />
+    <EmbeddedResource Remove="Views\NewFolder1\**" />
+    <EmbeddedResource Remove="Views\NewFolder2\**" />
+    <EmbeddedResource Remove="Views\NewFolder3\**" />
+    <EmbeddedResource Remove="Views\NewFolder\**" />
     <None Remove="Services\**" />
+    <None Remove="Views\NewFolder1\**" />
+    <None Remove="Views\NewFolder2\**" />
+    <None Remove="Views\NewFolder3\**" />
+    <None Remove="Views\NewFolder\**" />
   </ItemGroup>
 
   <ItemGroup>
+
+    <Compile Remove="Views\AboutUs.cs" />
 
     <Compile Remove="Views\Shared\_ProfilePartial.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Remove="wwwroot\css\FarmerHome.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Views\AboutUs" />
   </ItemGroup>
 
   <ItemGroup>

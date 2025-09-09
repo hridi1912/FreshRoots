@@ -20,7 +20,6 @@
             --secondary: #f6b31d;
             --light: #f9f9f9;
             --dark: #2d2d2d;
-            --accent: #8bc34a;
         }
 
         body {
@@ -43,7 +42,6 @@
             background-color: rgba(255, 255, 255, 0.95);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             padding: 10px 0;
-            transition: all 0.3s ease;
         }
 
         .navbar-brand {
@@ -67,62 +65,105 @@
                 color: var(--primary);
             }
 
-        .btn-primary {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            padding: 6px 15px;
+        /* Fix Join Us / Logout Buttons */
+        .navbar  {
+            font-size: 14px;
+            padding: 6px 14px;
             border-radius: 4px;
             font-weight: 600;
-            transition: all 0.3s;
+            line-height: 1.4;
+            white-space: nowrap; /* prevent text wrapping */
+        }
+        /* Shared style for both Join Us & Logout */
+        .custom-btn {
+            padding: 8px 20px; /* balanced padding */
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 6px;
+            white-space: nowrap; /* prevents line break */
+            transition: all 0.3s ease;
+            min-width: 110px; /* ensures wide enough background */
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }
 
-            .btn-primary:hover {
+        /* Join Us (Green button) */
+        .btn-primary.custom-btn {
+            background-color: #3a9949;
+            border: none;
+            color: #fff;
+        }
+
+            .btn-primary.custom-btn:hover {
+                background-color: #2a7c38;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            }
+
+        /* Logout (Red button) */
+        .btn-danger.custom-btn {
+            background-color: #dc3545;
+            border: none;
+            color: #fff;
+        }
+
+            .btn-danger.custom-btn:hover {
+                background-color: #a71d2a;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            }
+
+
+        .btn-primary.custom-btn {
+            background-color: #3a9949; /* fresh green */
+            border: none;
+            padding: 8px 20px; /* balanced padding */
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            border-radius: 6px;
+            white-space: nowrap; /* prevents line break */
+            transition: all 0.3s ease;
+            min-width: 110px; /* keeps button wide enough for text */
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+
+            .btn-primary.custom-btn:hover {
+                background-color: #2a7c38; /* darker green on hover */
+                transform: translateY(-2px);
+                box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            }
+
+
+        /* .btn-join {
+            background-color: var(--primary);
+            border: 1px solid var(--primary);
+            color: #fff;
+        }
+
+            .btn-join:hover {
                 background-color: var(--primary-dark);
                 border-color: var(--primary-dark);
-                transform: translateY(-2px);
             }
 
-        .btn-outline-success {
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            padding: 6px 16px;
-            border-radius: 4px;
-            font-weight: 600;
-            transition: all 0.3s;
+        .btn-logout {
+            background-color: #dc3545;
+            border: 1px solid #dc3545;
+            color: #fff;
         }
 
-            .btn-outline-success:hover {
-                background-color: var(--primary);
-                color: white;
-            }
+            .btn-logout:hover {
+                background-color: #b02a37;
+                border-color: #b02a37;
+            } */
 
-        .btn-danger{
-            background-color: #dc3545; /* Bootstrap red */
-            border: 2px solid #dc3545;
-            color: white;
-            padding: 6px 17px; /* same as Join Us for uniform height */
-            border-radius: 4px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-            .btn-danger:hover {
-                background-color: white;
-                color: #dc3545;
-                border-color: #dc3545;
-                transform: translateY(-2px);
-            }
-        /* Main Content */
-        .container {
-            flex: 1;
-        }
 
         /* Footer Styles */
         .footer {
             background-color: #222;
             color: #ccc;
             padding: 60px 0 30px;
-            width: 100%;
             margin-top: auto;
         }
 
@@ -169,18 +210,6 @@
             border-top: 1px solid #444;
             text-align: center;
         }
-
-       
-
-        {
-            padding: 10px 15px;
-        }
-
-        .btn {
-            margin: 5px 0;
-        }
-
-        }
     </style>
     @RenderSection("Styles", required: false)
 </head>
@@ -206,7 +235,6 @@
                     </li>
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
-                        @* Show dashboard based on role *@
                         @if (User.IsInRole("Buyer"))
                         {
                             <li class="nav-item">
@@ -227,49 +255,49 @@
                         <a class="nav-link" href="/About">About Us</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/Contact">Contact</a>
+                        <a class="nav-link" href="#contact-section">Contact</a>
                     </li>
                 </ul>
 
                 <!-- Right side items -->
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Buyer"))
+                <ul class="navbar-nav ms-auto align-items-center">
+                    @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Buyer"))
+                    {
+                        var user = await UserManager.GetUserAsync(User);
+                        int cartCount = 0;
+
+                        if (user != null)
                         {
-                            var user = await UserManager.GetUserAsync(User);
-                            int cartCount = 0;
+                            var cart = _db.Carts
+                            .Include(c => c.Items)
+                            .FirstOrDefault(c => c.BuyerId == user.Id);
+                            cartCount = cart?.Items.Sum(i => i.Quantity) ?? 0;
+                        }
 
-                            if (user != null)
-                            {
-                                var cart = _db.Carts
-                                .Include(c => c.Items)
-                                .FirstOrDefault(c => c.BuyerId == user.Id);
-                                cartCount = cart?.Items.Sum(i => i.Quantity) ?? 0;
-                            }
-
-                            <a class="btn btn-outline-success me-2 position-relative" href="/Cart">
+                        <li class="nav-item me-2">
+                            <a class="btn btn-outline-success btn-custom" href="/Cart">
                                 <i class="fas fa-shopping-cart me-1"></i> Cart
                                 @if (cartCount > 0)
                                 {
-                                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-solid rounded-circle"></span>
+                                    <span class="position-relative ms-1 top-0 start-100 translate-middle p-1 bg-success border border-solid rounded-circle"></span>
                                 }
                             </a>
-                        }
-                    </li>
+                        </li>
+                    }
+
                     <li class="nav-item">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
                             <form method="post" asp-controller="Auth" asp-action="Logout" class="d-inline">
                                 @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-danger me-2">Logout</button>
+                                <button type="submit" class="btn btn-danger me-2 custom-btn">Logout</button>
                             </form>
                         }
                         else
                         {
-                            <a class="btn btn-primary me-2" href="/Auth/Login">Join Us</a>
+                            <a class="btn btn-primary me-2 custom-btn" href="/Auth/Login">Join Us</a>
                         }
                     </li>
-                    
                 </ul>
             </div>
         </div>
@@ -312,7 +340,7 @@
                         <li><a href="/Tracking">Track Delivery</a></li>
                     </ul>
                 </div>
-                <div class="col-md-4 mb-4">
+                <div class="col-md-4 mb-4" id="contact-section">
                     <h3 class="footer-title">Contact Us</h3>
                     <ul class="footer-links">
                         <li><i class="fas fa-map-marker-alt me-2"></i> 123 Farm Road, Countryside</li>
@@ -322,7 +350,7 @@
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2023 FreshRoots. All rights reserved.</p>
+                <p>&copy; 2025 FreshRoots. All rights reserved.</p>
             </div>
         </div>
     </footer>
