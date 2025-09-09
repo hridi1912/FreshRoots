@@ -1,0 +1,28 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using FreshRoots.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark">Hello, @UserManager.GetUserName(User)!</a>
+        </li>
+        <li class="nav-item">
+            <form method="post" asp-controller="Auth" asp-action="Logout">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="nav-link btn btn-link text-dark border-0">Logout</button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="Auth" asp-action="Register">Register</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="Auth" asp-action="Login">Login</a>
+        </li>
+    }
+</ul>

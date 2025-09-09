@@ -1,0 +1,128 @@
+﻿@model FreshRoots.Models.ApplicationUser
+<link rel="stylesheet" href="~/css/_ProfilePartial.css" asp-append-version="true" />
+
+
+<div class="profile-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4><i class="fas fa-user me-2"></i>My Profile</h4>
+        <button class="btn btn-outline-secondary" onclick="loadDashboard()">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </button>
+    </div>
+
+    @if (ViewBag.Message != null)
+    {
+        <div class="alert alert-success">@ViewBag.Message</div>
+    }
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="user-avatar-large mb-3">
+                        @if (!string.IsNullOrEmpty(Model.FullName))
+                        {
+                            @Model.FullName[0]
+                        }
+                    </div>
+                    <h4>@Model.FullName</h4>
+                    <p class="text-muted">@Model.UserType</p>
+                    <p class="text-muted">Member since: @Model.CreatedAt.ToString("MMMM yyyy")</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5>Profile Information</h5>
+                    <form id="profileForm" 
+                          asp-action="ProfilePartial" 
+                          asp-controller="Profile" 
+                          method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name</label>
+                                <input asp-for="FullName" class="form-control" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email Address</label>
+                                <input asp-for="Email" class="form-control" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input asp-for="PhoneNumber" class="form-control" />
+                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">User Type</label>
+                                <input type="text" class="form-control" value="@Model.UserType" readonly />
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Profile
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary change-password-btn">
+                                <i class="fas fa-lock me-2"></i>Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5>Account Statistics</h5>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stat-number">12</div>
+                            <div class="stat-label">Total Orders</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">8</div>
+                            <div class="stat-label">Favorite Items</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-number">4</div>
+                            <div class="stat-label">Saved Farms</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .user-avatar-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, var(--primary), var(--primary-dark));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: bold;
+        margin: 0 auto;
+    }
+
+    .profile-container {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>

@@ -1,0 +1,80 @@
+﻿@model FreshRoots.Models.Product
+
+@{
+    ViewData["Title"] = "Product Details";
+}
+
+<div class="container mt-5">
+    <div class="row g-4">
+        <!-- Product Image -->
+        <div class="col-md-6 text-center">
+            <div class="shadow-sm rounded p-2 bg-white">
+                <img src="@Model.ImageUrl" class="img-fluid rounded" alt="@Model.Name" style="max-height: 400px; object-fit: cover;">
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h1 class="card-title mb-3">@Model.Name</h1>
+                    <p class="card-text text-muted fs-5">@Model.Description</p>
+
+                    <!-- Price + Stock -->
+                    <div class="d-flex align-items-center mb-3">
+                        <h3 class="text-success fw-bold mb-0">৳@Model.Price.ToString("N2")</h3>
+                        <div class="ms-3">
+                            @if (Model.StockQuantity > 0)
+                            {
+                                <span class="badge bg-success fs-6">In Stock (@Model.StockQuantity)</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger fs-6">Out of Stock</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Farm Info -->
+                    <div class="bg-light rounded p-3 mb-3">
+                        <h5 class="fw-bold mb-2">🌱 Farm Information</h5>
+                        <p class="mb-1"><strong>Farm:</strong> @Model.FarmerProfile?.FarmName</p>
+                        <p class="mb-1"><strong>Certification:</strong> @Model.FarmerProfile?.Certification</p>
+                        <p class="mb-0"><strong>Harvest Date:</strong> @Model.HarvestDate.ToString("MMMM dd, yyyy")</p>
+                    </div>
+
+                    <!-- Add to Cart -->
+                    @if (Model.StockQuantity > 0)
+                    {
+                        @if (User.IsInRole("Buyer"))
+                        {
+                            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="mb-3">
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <div class="input-group mb-3" style="max-width: 220px;">
+                                    <label class="input-group-text" for="quantity">Qty</label>
+                                    <input type="number" name="quantity" value="1" min="1" max="@Model.StockQuantity" class="form-control text-center" />
+                                </div>
+                                <button type="submit" class="btn btn-success btn-lg w-100 shadow-sm">
+                                    🛒 Add to Cart
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary btn-lg w-100" disabled>
+                                SignIn
+                            </button>
+                        }
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary btn-lg w-100" disabled>Out of Stock</button>
+                    }
+
+                    <!-- Back Button -->
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100 mt-2">← Back to Marketplace</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

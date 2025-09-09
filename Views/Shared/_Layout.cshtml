@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using FreshRoots.Data
+@using FreshRoots.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext _db
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -64,7 +70,7 @@
         .btn-primary {
             background-color: var(--primary);
             border-color: var(--primary);
-            padding: 8px 20px;
+            padding: 6px 15px;
             border-radius: 4px;
             font-weight: 600;
             transition: all 0.3s;
@@ -90,6 +96,22 @@
                 color: white;
             }
 
+        .btn-danger{
+            background-color: #dc3545; /* Bootstrap red */
+            border: 2px solid #dc3545;
+            color: white;
+            padding: 6px 17px; /* same as Join Us for uniform height */
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+            .btn-danger:hover {
+                background-color: white;
+                color: #dc3545;
+                border-color: #dc3545;
+                transform: translateY(-2px);
+            }
         /* Main Content */
         .container {
             flex: 1;
@@ -160,6 +182,7 @@
 
         }
     </style>
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <!-- Navbar -->
@@ -181,11 +204,24 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="/">Home</a>
                     </li>
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        @* Show dashboard based on role *@
+                        @if (User.IsInRole("Buyer"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/Home/BuyerHome">Dashboard</a>
+                            </li>
+                        }
+                        else if (User.IsInRole("Farmer"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/Home/FarmerHome">Dashboard</a>
+                            </li>
+                        }
+                    }
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/FarmerHome">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/Home/BuyerHome">Buyer Dashboard</a>
+                        <a class="nav-link" href="/Products/Index">Products</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/About">About Us</a>
@@ -198,10 +234,40 @@
                 <!-- Right side items -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="btn btn-outline-success me-2" href="/Cart"><i class="fas fa-shopping-cart me-1"></i> Cart</a>
+                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Buyer"))
+                        {
+                            var user = await UserManager.GetUserAsync(User);
+                            int cartCount = 0;
+
+                            if (user != null)
+                            {
+                                var cart = _db.Carts
+                                .Include(c => c.Items)
+                                .FirstOrDefault(c => c.BuyerId == user.Id);
+                                cartCount = cart?.Items.Sum(i => i.Quantity) ?? 0;
+                            }
+
+                            <a class="btn btn-outline-success me-2 position-relative" href="/Cart">
+                                <i class="fas fa-shopping-cart me-1"></i> Cart
+                                @if (cartCount > 0)
+                                {
+                                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-solid rounded-circle"></span>
+                                }
+                            </a>
+                        }
                     </li>
                     <li class="nav-item">
-                        <a class="btn btn-primary me-2" href="/Auth/Register">Join Us</a>
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <form method="post" asp-controller="Auth" asp-action="Logout" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger me-2">Logout</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a class="btn btn-primary me-2" href="/Auth/Login">Join Us</a>
+                        }
                     </li>
                     
                 </ul>
