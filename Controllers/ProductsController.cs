@@ -24,7 +24,7 @@ namespace FreshRoots.Controllers
             _db = db;
         }
 
-        // ----------------- PUBLIC -----------------
+        
         [AllowAnonymous]
         public async Task<IActionResult> Index(string? searchString, string? categoryFilter)
         {

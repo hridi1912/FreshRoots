@@ -17,6 +17,7 @@
         <table class="table table-bordered">
             <thead>
                 <tr>
+                    <th>Product View</th>
                     <th>Product</th>
                     <th>Price</th>
                     <th>Quantity</th>
@@ -28,6 +29,10 @@
                 @foreach (var item in Model.Items)
                 {
                     <tr>
+                        <td>
+                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name"
+                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" />
+                        </td>
                         <td>@item.Product.Name</td>
                         <td>৳@item.Product.Price.ToString("N2")</td>
                         <td>
