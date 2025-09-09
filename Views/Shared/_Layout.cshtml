@@ -1,4 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using FreshRoots.Data
+@using FreshRoots.Models
+@inject UserManager<ApplicationUser> UserManager
+@inject ApplicationDbContext _db
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -94,7 +100,7 @@
             background-color: #dc3545; /* Bootstrap red */
             border: 2px solid #dc3545;
             color: white;
-            padding: 6px 15px; /* same as Join Us for uniform height */
+            padding: 6px 17px; /* same as Join Us for uniform height */
             border-radius: 4px;
             font-weight: 600;
             transition: all 0.3s;
@@ -228,7 +234,27 @@
                 <!-- Right side items -->
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="btn btn-outline-success me-2" href="/Cart"><i class="fas fa-shopping-cart me-1"></i> Cart</a>
+                        @if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Buyer"))
+                        {
+                            var user = await UserManager.GetUserAsync(User);
+                            int cartCount = 0;
+
+                            if (user != null)
+                            {
+                                var cart = _db.Carts
+                                .Include(c => c.Items)
+                                .FirstOrDefault(c => c.BuyerId == user.Id);
+                                cartCount = cart?.Items.Sum(i => i.Quantity) ?? 0;
+                            }
+
+                            <a class="btn btn-outline-success me-2 position-relative" href="/Cart">
+                                <i class="fas fa-shopping-cart me-1"></i> Cart
+                                @if (cartCount > 0)
+                                {
+                                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-solid rounded-circle"></span>
+                                }
+                            </a>
+                        }
                     </li>
                     <li class="nav-item">
                         @if (User.Identity != null && User.Identity.IsAuthenticated)

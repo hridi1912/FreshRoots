@@ -1,4 +1,10 @@
-﻿:root {
+﻿namespace FreshRoots.wwwroot.css
+{
+    public class FarmerHome
+{
+    : root
+
+{
     --primary: #3a9949;
     --primary-dark: #2a7c38;
     --secondary: #f6b31d;
@@ -161,8 +167,8 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 14px;
 }
 
-/* Products Carousel */
-.featured-products {
+/* Products Table */
+.products-table {
     background: white;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -170,60 +176,27 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 20px;
 }
 
-.product-card {
-    border: 1px solid #eee;
-    border-radius: 10px;
-    overflow: hidden;
-    transition: all 0.3s;
-    height: 100%;
-}
-
-    .product-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-.product-img {
-    height: 180px;
-    overflow: hidden;
-}
-
-    .product-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s;
-    }
-
-.product-card:hover .product-img img {
-    transform: scale(1.05);
-}
-
-.product-info {
-    padding: 15px;
-}
-
-.product-title {
+.table th {
+    border-top: none;
     font-weight: 600;
-    margin-bottom: 5px;
     color: var(--dark);
 }
 
-.product-farmer {
-    color: #6c757d;
-    font-size: 14px;
-    margin-bottom: 10px;
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
 }
 
-.product-price {
-    font-weight: 700;
+.status-active {
+    background: rgba(58, 153, 73, 0.1);
     color: var(--primary);
-    font-size: 18px;
 }
 
-.product-rating {
-    color: #ffc107;
-    margin-bottom: 10px;
+.status-inactive {
+    background: rgba(108, 117, 125, 0.1);
+    color: #6c757d;
 }
 
 /* Recent Orders */
@@ -247,26 +220,7 @@ h1, h2, h3, h4, h5, h6 {
         border-bottom: none;
     }
 
-.order-info {
-    display: flex;
-    align-items: center;
-}
-
-.order-img {
-    width: 50px;
-    height: 50px;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-right: 15px;
-}
-
-    .order-img img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-.order-details h5 {
+.order-info h5 {
     margin-bottom: 5px;
 }
 
@@ -319,68 +273,76 @@ h1, h2, h3, h4, h5, h6 {
         color: white;
     }
 
-/* Responsive Design - FIXED VERSION */
-@media (max-width: 768px) {
-    body {
-        flex-direction: column;
+/* Responsive */
+
+
+{
+    flex-direction: column;
+}
+
+.sidebar {
+    width: 100%;
+    height: auto;
+}
+
+.sidebar-menu {
+    display: flex;
+    overflow-x: auto;
+}
+
+    .sidebar-menu li {
+        margin-bottom: 0;
+        margin-right: 5px;
     }
 
-    .sidebar {
-        width: 100%;
-        height: auto;
-    }
-
-    .sidebar-menu {
-        display: flex;
-        overflow-x: auto;
-    }
-
-        .sidebar-menu li {
-            margin-bottom: 0;
-            margin-right: 5px;
-        }
-
-        .sidebar-menu a {
-            border-left: none;
-            border-bottom: 3px solid transparent;
-            padding: 10px 15px;
-            text-align: center;
-        }
-
-            .sidebar-menu a:hover, .sidebar-menu a.active {
-                border-left: none;
-                border-bottom: 3px solid var(--secondary);
-            }
-
-        .sidebar-menu span {
-            font-size: 12px;
-        }
-
-    .main-content {
-        height: auto;
-        overflow-y: visible;
-    }
-
-    .header {
-        flex-direction: column;
+    .sidebar-menu a {
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        padding: 10px 15px;
         text-align: center;
     }
 
-    .user-info {
-        margin-top: 10px;
-        justify-content: center;
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            border-left: none;
+            border-bottom: 3px solid var(--secondary);
+        }
+
+    .sidebar-menu span {
+        font-size: 12px;
     }
+
+.main-content {
+    height: auto;
+    overflow-y: visible;
 }
 
-@media (max-width: 576px) {
-    .sidebar-menu span {
-        display: block;
-        font-size: 10px;
-    }
+}
 
-    .sidebar-menu i {
-        margin-right: 0;
-        display: block;
-        margin-bottom: 5px;
+
+
+{
+    margin-right: 0;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.sidebar-menu span {
+    display: block;
+}
+
+}
+
+
+
+{
+    flex-direction: column;
+    text-align: center;
+}
+
+.user-info {
+    margin-top: 10px;
+}
+
+}
     }
 }

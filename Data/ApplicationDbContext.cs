@@ -9,6 +9,9 @@ namespace FreshRoots.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<Product> Products => Set<Product>();
+        public DbSet<Cart> Carts => Set<Cart>();
+        public DbSet<CartItem> CartItems => Set<CartItem>();
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -20,6 +23,10 @@ namespace FreshRoots.Data
                 fp.Property(x => x.FarmName).HasMaxLength(120);
                 fp.Property(x => x.Certification).HasMaxLength(120);
             });
+            builder.Entity<Product>()
+          .Property(p => p.Price)
+          .HasPrecision(18, 2);
+           
         }
     }
 }

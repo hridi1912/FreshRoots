@@ -46,16 +46,25 @@
                     <!-- Add to Cart -->
                     @if (Model.StockQuantity > 0)
                     {
-                        <form asp-controller="Cart" asp-action="AddToCart" method="post" class="mb-3">
-                            <input type="hidden" name="productId" value="@Model.Id" />
-                            <div class="input-group mb-3" style="max-width: 220px;">
-                                <label class="input-group-text" for="quantity">Qty</label>
-                                <input type="number" name="quantity" value="1" min="1" max="@Model.StockQuantity" class="form-control text-center" />
-                            </div>
-                            <button type="submit" class="btn btn-success btn-lg w-100 shadow-sm">
-                                🛒 Add to Cart
+                        @if (User.IsInRole("Buyer"))
+                        {
+                            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="mb-3">
+                                <input type="hidden" name="productId" value="@Model.Id" />
+                                <div class="input-group mb-3" style="max-width: 220px;">
+                                    <label class="input-group-text" for="quantity">Qty</label>
+                                    <input type="number" name="quantity" value="1" min="1" max="@Model.StockQuantity" class="form-control text-center" />
+                                </div>
+                                <button type="submit" class="btn btn-success btn-lg w-100 shadow-sm">
+                                    🛒 Add to Cart
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary btn-lg w-100" disabled>
+                                SignIn
                             </button>
-                        </form>
+                        }
                     }
                     else
                     {

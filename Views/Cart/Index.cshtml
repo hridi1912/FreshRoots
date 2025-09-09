@@ -1,0 +1,75 @@
+﻿@model FreshRoots.Models.Cart
+<link rel="stylesheet" href="~/css/Cart.css" asp-append-version="true" />
+
+@{
+    ViewData["Title"] = "Your Cart";
+}
+
+<div class="container mt-5">
+    <h2>Your Cart</h2>
+    @if (Model?.Items == null || !Model.Items.Any())
+    {
+        <p>Your cart is empty.</p>
+        <a asp-controller="Products" asp-action="Index" class="btn btn-primary">Go Shopping</a>
+    }
+    else
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Product View</th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name"
+                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" />
+                        </td>
+                        <td>@item.Product.Name</td>
+                        <td>৳@item.Product.Price.ToString("N2")</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <!-- Decrement Button -->
+                                <form asp-action="UpdateQuantity" method="post" class="me-1">
+                                    <input type="hidden" name="cartItemId" value="@item.Id" />
+                                    <input type="hidden" name="change" value="-1" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">-</button>
+                                </form>
+
+                                <span class="px-2">@item.Quantity</span>
+
+                                <!-- Increment Button -->
+                                <form asp-action="UpdateQuantity" method="post" class="ms-1">
+                                    <input type="hidden" name="cartItemId" value="@item.Id" />
+                                    <input type="hidden" name="change" value="1" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">+</button>
+                                </form>
+                            </div>
+                        </td>
+                        <td>৳@(item.Product.Price* item.Quantity)</td>
+                        <td>
+                            <form asp-action="Remove" method="post">
+                                <input type="hidden" name="cartItemId" value="@item.Id" />
+                                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                    <td colspan="2">
+                        <strong>৳@Model.Items.Sum(i => i.Product.Price * i.Quantity)</strong>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
+</div>
