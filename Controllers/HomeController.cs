@@ -47,7 +47,7 @@ namespace FreshRoots.Controllers
                 .Include(p => p.FarmerProfile) // Include farmer profile if needed
                 .Where(p => p.StockQuantity > 0) // Only show products in stock
                 .OrderByDescending(p => p.HarvestDate) // Show newest first
-                .Take(6) // Limit to 6 featured products
+                .Take(3) // Limit to 6 featured products
                 .ToListAsync();
 
             return View(products);
