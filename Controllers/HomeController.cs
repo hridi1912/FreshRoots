@@ -40,10 +40,17 @@ namespace FreshRoots.Controllers
         }
 
         [Authorize(Roles = "Buyer")]
-
-        public IActionResult BuyerHome()
+        public async Task<IActionResult> BuyerHome()
         {
-            return View();
+            // Get featured products (you can customize this query)
+            var products = await _db.Products
+                .Include(p => p.FarmerProfile) // Include farmer profile if needed
+                .Where(p => p.StockQuantity > 0) // Only show products in stock
+                .OrderByDescending(p => p.HarvestDate) // Show newest first
+                .Take(6) // Limit to 6 featured products
+                .ToListAsync();
+
+            return View(products);
         }
 
     }
