@@ -1,11 +1,12 @@
 ﻿// Controllers/ProductsController.cs
+using FreshRoots.Data;
+using FreshRoots.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FreshRoots.Data;
-using FreshRoots.Models;
 using System;
 using System.IO;
 using System.Linq;
@@ -17,14 +18,16 @@ namespace FreshRoots.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private readonly ApplicationDbContext _db;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ProductsController(IWebHostEnvironment env, ApplicationDbContext db)
+        public ProductsController(IWebHostEnvironment env, ApplicationDbContext db, UserManager<ApplicationUser> userManager)
         {
             _env = env;
             _db = db;
+            _userManager = userManager;
         }
 
-        
+
         [AllowAnonymous]
         public async Task<IActionResult> Index(string? searchString, string? categoryFilter)
         {
@@ -80,12 +83,18 @@ namespace FreshRoots.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product model, IFormFile? imageFile)
         {
+
             if (!ModelState.IsValid) return View(model);
+
+            // Assign the current logged-in farmer
+            var user = await _userManager.GetUserAsync(User);
+           
+            model.FarmerId = user?.Id;
+           
 
             if (imageFile != null && imageFile.Length > 0)
                 model.ImageUrl = await SaveImage(imageFile);
 
-            // ensure owned type isn’t null
             model.FarmerProfile ??= new FarmerProfile();
 
             _db.Products.Add(model);
@@ -100,6 +109,7 @@ namespace FreshRoots.Controllers
         {
             if (id is null) return NotFound();
             var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
+
             if (product is null) return NotFound();
             return View(product);
         }
@@ -114,6 +124,12 @@ namespace FreshRoots.Controllers
 
             var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
             if (product is null) return NotFound();
+
+            if (string.IsNullOrWhiteSpace(product.FarmerId))
+            {
+                var user = await _userManager.GetUserAsync(User);
+                product.FarmerId = user?.Id;
+            }
 
             if (imageFile != null && imageFile.Length > 0)
             {

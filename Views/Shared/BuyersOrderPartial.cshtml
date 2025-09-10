@@ -1,0 +1,23 @@
+﻿@model IEnumerable<FreshRoots.Models.Order>
+
+<div class="orders-container">
+    @if (!Model.Any())
+    {
+        <p class="text-muted">You haven’t placed any orders yet.</p>
+    }
+    else
+    {
+        @foreach (var order in Model)
+        {
+            <div class="order-item">
+                <div class="order-info">
+                    <div class="order-details">
+                        <h5>Order #@order.Id</h5>
+                        <div class="order-date">@order.OrderDate.ToString("yyyy-MM-dd HH:mm")</div>
+                    </div>
+                </div>
+                <span class="order-status @(order.Status.ToLower())">@order.Status</span>
+            </div>
+        }
+    }
+</div>

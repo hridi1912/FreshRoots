@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FreshRoots.Models
 {
@@ -28,6 +29,11 @@ namespace FreshRoots.Models
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime HarvestDate { get; set; } = DateTime.Today;
+
+        
+        public string? FarmerId { get; set; }        // FK to AspNetUsers
+        [ForeignKey("FarmerId")]
+        public ApplicationUser? Farmer { get; set; }
 
         public FarmerProfile FarmerProfile { get; set; } = new FarmerProfile();
     }
