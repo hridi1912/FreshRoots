@@ -1,45 +1,52 @@
+using FreshRoots.Data;  
 using FreshRoots.Models;
-
-
 using Microsoft.AspNetCore.Authorization;
-
-//using FreshRoots.Services;
-
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FreshRoots.Data;  // Make sure you include this to use the ApplicationDbContext
 using System.Linq;
 
 namespace FreshRoots.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ApplicationDbContext _db;
 
-        public HomeController(ApplicationDbContext db)
+        public HomeController(ApplicationDbContext db,
+                              UserManager<ApplicationUser> userManager,
+                              SignInManager<ApplicationUser> signInManager)
         {
             _db = db;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
-        public IActionResult Index()
+        
+        public async Task<IActionResult> Index()
         {
+            if (_signInManager.IsSignedIn(User))
+            {
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user != null && await _userManager.IsInRoleAsync(user, "Admin"))
+                {
+                    // Redirect Admin to Admin Dashboard
+                    return RedirectToAction("Index", "Admin");
+                }
+            }
+
             return View();
         }
 
         // Farmer dashboard homepage (load from DB now)
-
         [Authorize(Roles = "Farmer")]
-
-
-
         public async Task<IActionResult> FarmerHome()
-
         {
             var products = await _db.Products.OrderBy(p => p.Id).ToListAsync();
-
             return View(products);
         }
-
 
         [Authorize(Roles = "Buyer")]
         public async Task<IActionResult> BuyerHome()
@@ -54,6 +61,5 @@ namespace FreshRoots.Controllers
 
             return View(products);
         }
-
     }
 }
