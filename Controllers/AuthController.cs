@@ -11,6 +11,10 @@ namespace FreshRoots.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
+        private const string AdminEmail = "adminFreshRoots@gmail.com";
+        private const string AdminPassword = "12345678";
+        private const string AdminRole = "Admin";
+
         public AuthController(UserManager<ApplicationUser> userManager,
                               SignInManager<ApplicationUser> signInManager,
                               RoleManager<IdentityRole> roleManager)
@@ -71,7 +75,49 @@ namespace FreshRoots.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // Find the user by email
+            // 🔹 Special check for admin
+            if (model.Email == AdminEmail && model.Password == AdminPassword)
+            {
+                var adminUser = await _userManager.FindByEmailAsync(AdminEmail);
+
+                if (adminUser == null)
+                {
+                    // Create admin account automatically
+                    adminUser = new ApplicationUser
+                    {
+                        UserName = AdminEmail,
+                        Email = AdminEmail,
+                        FullName = "System Administrator",
+                        UserType = AdminRole
+                    };
+
+                    var createResult = await _userManager.CreateAsync(adminUser, AdminPassword);
+                    if (!createResult.Succeeded)
+                    {
+                        ModelState.AddModelError("", "Failed to create admin account.");
+                        return View(model);
+                    }
+                }
+
+                // Ensure Admin role exists
+                if (!await _roleManager.RoleExistsAsync(AdminRole))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole(AdminRole));
+                }
+
+                // Assign role if not already
+                if (!await _userManager.IsInRoleAsync(adminUser, AdminRole))
+                {
+                    await _userManager.AddToRoleAsync(adminUser, AdminRole);
+                }
+
+                // Sign in admin
+                await _signInManager.SignInAsync(adminUser, model.RememberMe);
+
+                return RedirectToAction("Index", "Admin"); // 🔹 Redirect to Admin Panel
+            }
+
+            // 🔹 Normal login for non-admin users
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
@@ -79,17 +125,8 @@ namespace FreshRoots.Controllers
                 return View(model);
             }
 
-            // Optional: verify role if you have a role selector in the login form
-            var roleFromForm = Request.Form["role"].ToString(); // hidden input for role
-            if (!string.IsNullOrEmpty(roleFromForm) && !await _userManager.IsInRoleAsync(user, roleFromForm))
-            {
-                ModelState.AddModelError("", $"User is not registered as {roleFromForm}.");
-                return View(model);
-            }
-
-            // Sign in
             var result = await _signInManager.PasswordSignInAsync(
-                user.UserName, // Username is required
+                user.UserName,
                 model.Password,
                 model.RememberMe,
                 lockoutOnFailure: false
@@ -97,7 +134,6 @@ namespace FreshRoots.Controllers
 
             if (result.Succeeded)
             {
-                // Redirect based on role
                 if (await _userManager.IsInRoleAsync(user, "Farmer"))
                     return RedirectToAction("Index", "Home");
                 else
@@ -107,6 +143,7 @@ namespace FreshRoots.Controllers
             ModelState.AddModelError("", "Invalid login attempt.");
             return View(model);
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
