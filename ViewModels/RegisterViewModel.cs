@@ -10,7 +10,13 @@ namespace FreshRoots.ViewModels
 
         [Required]
         [EmailAddress]
+        [Display(Name = "Email Address")]
         public string Email { get; set; }
+
+        [Required]
+        [Phone]
+        [Display(Name = "Phone Number")]
+        public string PhoneNumber { get; set; }
 
         [Required]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
@@ -20,9 +26,11 @@ namespace FreshRoots.ViewModels
         [Required]
         [Compare("Password", ErrorMessage = "Passwords do not match.")]
         [DataType(DataType.Password)]
+        [Display(Name = "Confirm Password")]
         public string ConfirmPassword { get; set; }
 
         [Required]
-        public string Role { get; set; } 
+        [Display(Name = "Role")]
+        public string Role { get; set; }
     }
 }

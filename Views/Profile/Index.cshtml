@@ -1,4 +1,7 @@
-﻿@model FreshRoots.Models.ApplicationUser
+﻿@model dynamic
+@{
+    var profileType = ViewBag.ProfileType as string;
+}
 
 <div class="container mt-4">
     <h2><i class="fas fa-user-circle"></i> My Profile</h2>
@@ -9,20 +12,40 @@
         <div class="alert alert-success">@ViewBag.Message</div>
     }
 
-    <form asp-action="Index" method="post">
-        <div class="mb-3">
-            <label class="form-label">Full Name</label>
-            <input asp-for="FullName" class="form-control" />
-        </div>
+    <form asp-action="ProfilePartial" asp-controller="Profile" method="post">
+        @Html.AntiForgeryToken()
 
         <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input asp-for="Email" class="form-control" />
+            <label class="form-label">Full Name</label>
+            <input name="FullName" value="@Model?.FullName" class="form-control" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Phone Number</label>
-            <input asp-for="PhoneNumber" class="form-control" />
+            <input name="PhoneNumber" value="@Model?.PhoneNumber" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Address</label>
+            <input name="Address" value="@Model?.Address" class="form-control" />
+        </div>
+
+        @if (profileType == "Farmer")
+        {
+            <div class="mb-3">
+                <label class="form-label">Pickup Location</label>
+                <input name="PickupLocation" value="@Model?.PickupLocation" class="form-control" />
+            </div>
+        }
+
+        <div class="mb-3">
+            <label class="form-label">Profile Picture (URL)</label>
+            <input name="ProfilePicture" value="@Model?.ProfilePicture" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">User Type</label>
+            <input type="text" class="form-control" value="@profileType" readonly />
         </div>
 
         <button type="submit" class="btn btn-primary">Update Profile</button>

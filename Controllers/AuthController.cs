@@ -1,4 +1,5 @@
-﻿using FreshRoots.Models;
+﻿using FreshRoots.Data;
+using FreshRoots.Models;
 using FreshRoots.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ namespace FreshRoots.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly ApplicationDbContext _db;
 
         private const string AdminEmail = "adminFreshRoots@gmail.com";
         private const string AdminPassword = "12345678";
@@ -17,11 +19,13 @@ namespace FreshRoots.Controllers
 
         public AuthController(UserManager<ApplicationUser> userManager,
                               SignInManager<ApplicationUser> signInManager,
-                              RoleManager<IdentityRole> roleManager)
+                              RoleManager<IdentityRole> roleManager,
+                              ApplicationDbContext db)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _roleManager = roleManager;
+            _db = db;
         }
 
         [HttpGet]
@@ -37,22 +41,51 @@ namespace FreshRoots.Controllers
             {
                 UserName = model.Email,
                 Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
                 FullName = model.FullName,
-                UserType = model.Role
+                UserType = model.Role,
+                CreatedAt = DateTime.UtcNow
             };
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
-                // Ensure the role exists
                 if (!await _roleManager.RoleExistsAsync(model.Role))
                 {
                     await _roleManager.CreateAsync(new IdentityRole(model.Role));
                 }
 
-                // Assign role to the user
                 await _userManager.AddToRoleAsync(user, model.Role);
+
+                // Insert into Farmer or Buyer table
+                if (model.Role == "Farmer")
+                {
+                    var farmer = new Farmer
+                    {
+                        UserId = user.Id,
+                        FullName = model.FullName,
+                        PhoneNumber = model.PhoneNumber,
+                        Address = null,
+                        PickupLocation = null,
+                        ProfilePicture = null
+                    };
+                    _db.Farmers.Add(farmer);
+                }
+                else if (model.Role == "Buyer")
+                {
+                    var buyer = new Buyer
+                    {
+                        UserId = user.Id,
+                        FullName = model.FullName,
+                        PhoneNumber = model.PhoneNumber,
+                        Address = null,
+                        ProfilePicture = null
+                    };
+                    _db.Buyers.Add(buyer);
+                }
+
+                await _db.SaveChangesAsync();
 
                 TempData["Message"] = "Registration successful! Please login.";
                 return RedirectToAction("Login");
@@ -75,20 +108,21 @@ namespace FreshRoots.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            // 🔹 Special check for admin
+            // Special check for admin
             if (model.Email == AdminEmail && model.Password == AdminPassword)
             {
                 var adminUser = await _userManager.FindByEmailAsync(AdminEmail);
 
                 if (adminUser == null)
                 {
-                    // Create admin account automatically
                     adminUser = new ApplicationUser
                     {
                         UserName = AdminEmail,
                         Email = AdminEmail,
+                        PhoneNumber = null,
                         FullName = "System Administrator",
-                        UserType = AdminRole
+                        UserType = AdminRole,
+                        CreatedAt = DateTime.UtcNow
                     };
 
                     var createResult = await _userManager.CreateAsync(adminUser, AdminPassword);
@@ -99,25 +133,20 @@ namespace FreshRoots.Controllers
                     }
                 }
 
-                // Ensure Admin role exists
                 if (!await _roleManager.RoleExistsAsync(AdminRole))
                 {
                     await _roleManager.CreateAsync(new IdentityRole(AdminRole));
                 }
 
-                // Assign role if not already
                 if (!await _userManager.IsInRoleAsync(adminUser, AdminRole))
                 {
                     await _userManager.AddToRoleAsync(adminUser, AdminRole);
                 }
 
-                // Sign in admin
                 await _signInManager.SignInAsync(adminUser, model.RememberMe);
-
-                return RedirectToAction("Index", "Admin"); // 🔹 Redirect to Admin Panel
+                return RedirectToAction("Index", "Admin");
             }
 
-            // 🔹 Normal login for non-admin users
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
@@ -125,25 +154,21 @@ namespace FreshRoots.Controllers
                 return View(model);
             }
 
-            var result = await _signInManager.PasswordSignInAsync(
+            var loginResult = await _signInManager.PasswordSignInAsync(
                 user.UserName,
                 model.Password,
                 model.RememberMe,
                 lockoutOnFailure: false
             );
 
-            if (result.Succeeded)
+            if (loginResult.Succeeded)
             {
-                if (await _userManager.IsInRoleAsync(user, "Farmer"))
-                    return RedirectToAction("Index", "Home");
-                else
-                    return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Home");
             }
 
             ModelState.AddModelError("", "Invalid login attempt.");
             return View(model);
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
