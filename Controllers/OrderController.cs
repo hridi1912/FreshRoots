@@ -1,0 +1,246 @@
+﻿using FreshRoots.Data;
+using FreshRoots.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
+
+namespace FreshRoots.Controllers
+{
+    [Authorize]
+    public class OrdersController : Controller
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public OrdersController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        {
+            _db = db;
+            _userManager = userManager;
+        }
+
+        // ✅ Checkout page preview
+        public async Task<IActionResult> Checkout()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+                return Unauthorized();
+
+            // Get cart items including product
+            var cartItems = await _db.CartItems
+                .Include(c => c.Product)
+                .Include(c => c.Cart)
+                .Where(c => c.Cart.BuyerId == user.Id)
+                .ToListAsync();
+
+            if (!cartItems.Any())
+                return RedirectToAction("Index", "Cart");
+
+            // Create order preview
+            var orderPreview = new Order
+            {
+                BuyerId = user.Id,
+                OrderDate = DateTime.Now,
+                Status = "Pending",
+                TotalAmount = cartItems.Sum(c => c.Quantity * c.Product.Price),
+                OrderItems = cartItems.Select(c => new OrderItem
+                {
+                    ProductId = c.ProductId,
+                    FarmerId = c.Product.FarmerId,
+                    Quantity = c.Quantity,
+                    Price = c.Product.Price,
+                    Product = c.Product
+                }).ToList()
+            };
+
+            return View(orderPreview);
+        }
+
+        // ✅ Place Order (submit)
+        [HttpPost]
+        public async Task<IActionResult> PlaceOrder()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var cartItems = await _db.CartItems
+                .Include(c => c.Product)
+                .Include(c => c.Cart)
+                .Where(c => c.Cart.BuyerId == user.Id)
+                .ToListAsync();
+
+            if (!cartItems.Any())
+                return RedirectToAction("Index", "Cart");
+
+            var order = new Order
+            {
+                BuyerId = user.Id,
+                OrderDate = DateTime.Now,
+                Status = "Pending",
+                TotalAmount = cartItems.Sum(c => c.Quantity * c.Product.Price),
+                OrderItems = cartItems.Select(c => new OrderItem
+                {
+                    ProductId = c.ProductId,
+                    FarmerId = c.Product.FarmerId,
+                    Quantity = c.Quantity,
+                    Price = c.Product.Price,
+                    Product = c.Product
+                }).ToList()
+            };
+
+            _db.Orders.Add(order);
+            _db.CartItems.RemoveRange(cartItems);
+            await _db.SaveChangesAsync();
+
+            // Redirect to Order Confirmation page
+            return RedirectToAction("OrderConfirmation", new { orderId = order.Id });
+        }
+
+        // ✅ Order Confirmation
+        public async Task<IActionResult> OrderConfirmation(int orderId)
+        {
+            var order = await _db.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+                return NotFound();
+
+            return View(order);
+        }
+
+        // ✅ Show buyer's orders (full page)
+        public async Task<IActionResult> MyOrders()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var orders = await _db.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .Where(o => o.BuyerId == user.Id)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            return View(orders);
+        }
+
+        // ✅ Buyer's orders partial view for dashboard
+        public async Task<IActionResult> BuyersOrderPartial()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return PartialView("BuyersOrderPartial", new List<Order>());
+            var orders = await _db.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .Where(o => o.BuyerId == user.Id)
+                .OrderByDescending(o => o.OrderDate)
+                .Take(5)
+                .ToListAsync();
+
+            return PartialView("BuyersOrderPartial", orders);
+        }
+
+        // ✅ Farmer's orders (full page)
+        [Authorize(Roles = "Farmer")]
+        public async Task<IActionResult> FarmerOrders()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var orderItems = await _db.OrderItems
+                .Include(oi => oi.Order)
+                    .ThenInclude(o => o.Buyer)
+                .Include(oi => oi.Product)
+                .Where(oi => oi.FarmerId == user.Id)
+                .OrderByDescending(oi => oi.Order.OrderDate)
+                .ToListAsync();
+
+            // Return the partial view as the main view
+            return View("FarmerOrderPartial", orderItems);
+        }
+
+        // ✅ Update order status (Farmer only)
+        [HttpPost]
+        [Authorize(Roles = "Farmer")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateOrderStatus(int orderItemId, string status)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            var orderItem = await _db.OrderItems
+                .Include(oi => oi.Order)
+                .FirstOrDefaultAsync(oi => oi.Id == orderItemId && oi.FarmerId == user.Id);
+
+            if (orderItem == null)
+            {
+                return NotFound();
+            }
+
+            // Update the order item status
+            orderItem.Status = status;
+            _db.OrderItems.Update(orderItem);
+
+            // Check if all order items have the same status to update the main order status
+            var orderItems = await _db.OrderItems
+                .Where(oi => oi.OrderId == orderItem.OrderId)
+                .ToListAsync();
+
+            // Update main order status based on individual item statuses
+            if (orderItems.All(oi => oi.Status == "Delivered"))
+            {
+                orderItem.Order.Status = "Delivered";
+            }
+            else if (orderItems.All(oi => oi.Status == "Shipped"))
+            {
+                orderItem.Order.Status = "Shipped";
+            }
+            else if (orderItems.Any(oi => oi.Status == "Processing"))
+            {
+                orderItem.Order.Status = "Processing";
+            }
+            else if (orderItems.Any(oi => oi.Status == "Pending"))
+            {
+                orderItem.Order.Status = "Pending";
+            }
+
+            _db.Orders.Update(orderItem.Order);
+            await _db.SaveChangesAsync();
+
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Ok();
+            }
+
+            return RedirectToAction(nameof(FarmerOrders));
+        }
+
+
+        // ✅ Farmer's orders partial view for dashboard
+        [Authorize(Roles = "Farmer")]
+        public async Task<IActionResult> FarmerOrderPartial()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return PartialView("FarmerOrderPartial", new List<OrderItem>());
+
+            var orderItems = await _db.OrderItems
+                .Include(oi => oi.Order)
+                .ThenInclude(o => o.Buyer)
+                .Include(oi => oi.Product)
+                .Where(oi => oi.FarmerId == user.Id)
+                .OrderByDescending(oi => oi.Order.OrderDate)
+                .Take(10)
+                .ToListAsync();
+
+            return PartialView("FarmerOrderPartial", orderItems);
+        }
+    }
+
+    // ViewModel for Farmer Orders
+    public class FarmerOrderViewModel
+    {
+        public int OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public string BuyerId { get; set; }
+        public string Status { get; set; }
+        public List<OrderItem> Items { get; set; }
+        public decimal TotalAmount { get; set; }
+    }
+}

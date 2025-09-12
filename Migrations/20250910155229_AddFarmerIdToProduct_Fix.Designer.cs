@@ -4,6 +4,7 @@ using FreshRoots.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FreshRoots.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250910155229_AddFarmerIdToProduct_Fix")]
+    partial class AddFarmerIdToProduct_Fix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -196,10 +199,6 @@ namespace FreshRoots.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("FarmerId");
@@ -230,6 +229,7 @@ namespace FreshRoots.Migrations
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("FarmerId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("HarvestDate")
@@ -463,7 +463,8 @@ namespace FreshRoots.Migrations
                     b.HasOne("FreshRoots.Models.ApplicationUser", "Farmer")
                         .WithMany()
                         .HasForeignKey("FarmerId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.OwnsOne("FreshRoots.Models.FarmerProfile", "FarmerProfile", b1 =>
                         {
