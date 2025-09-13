@@ -1,12 +1,12 @@
-﻿// Controllers/ProductsController.cs
+﻿using FreshRoots.Data;
+using FreshRoots.Models;
+using FreshRoots.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using FreshRoots.Data;
-using FreshRoots.Models;
 using System;
 using System.IO;
 using System.Linq;
@@ -82,7 +82,7 @@ namespace FreshRoots.Controllers
             if (farmer == null) return Unauthorized();
 
             var items = await _db.Products
-                .Where(p => p.FarmerId == farmer.FarmerId)   // ✅ FIXED
+                .Where(p => p.FarmerId == farmer.FarmerId)
                 .Include(p => p.Farmer)
                 .AsNoTracking()
                 .OrderByDescending(p => p.Id)
@@ -108,22 +108,31 @@ namespace FreshRoots.Controllers
             if (imageFile != null && imageFile.Length > 0)
                 model.ImageUrl = await SaveImage(imageFile);
 
-            model.FarmerId = farmer.FarmerId;   // ✅ FIXED
+            model.FarmerId = farmer.FarmerId;
             model.FarmerProfile ??= new FarmerProfile();
 
             _db.Products.Add(model);
             await _db.SaveChangesAsync();
 
-            TempData["Msg"] = "Product created.";
-            return RedirectToAction(nameof(Manage));
+            ViewBag.Success = "✅ Product created successfully!";
+            ModelState.Clear(); // clear old form inputs
+            return View(new Product()); // return to same Create page with empty form
         }
+
 
         [Authorize(Roles = "Farmer")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id is null) return NotFound();
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
-            if (product is null) return NotFound();
+
+            var userId = _userManager.GetUserId(User);
+            var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+            if (farmer == null) return Unauthorized();
+
+            var product = await _db.Products
+                .FirstOrDefaultAsync(p => p.Id == id && p.FarmerId == farmer.FarmerId);
+
+            if (product is null) return NotFound(); // not found or not owned
             return View(product);
         }
 
@@ -135,7 +144,13 @@ namespace FreshRoots.Controllers
             if (id != model.Id) return BadRequest();
             if (!ModelState.IsValid) return View(model);
 
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
+            var userId = _userManager.GetUserId(User);
+            var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+            if (farmer == null) return Unauthorized();
+
+            var product = await _db.Products
+                .FirstOrDefaultAsync(p => p.Id == id && p.FarmerId == farmer.FarmerId);
+
             if (product is null) return NotFound();
 
             if (imageFile != null && imageFile.Length > 0)
@@ -171,7 +186,13 @@ namespace FreshRoots.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == id);
+            var userId = _userManager.GetUserId(User);
+            var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+            if (farmer == null) return Unauthorized();
+
+            var product = await _db.Products
+                .FirstOrDefaultAsync(p => p.Id == id && p.FarmerId == farmer.FarmerId);
+
             if (product is null) return NotFound();
 
             if (!string.IsNullOrWhiteSpace(product.ImageUrl))
@@ -212,6 +233,184 @@ namespace FreshRoots.Controllers
         {
             var path = relativeWebPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
             return Path.Combine(_env.WebRootPath ?? string.Empty, path);
+        }
+
+        // ----------------- FARMER DASHBOARD -----------------
+        [Authorize(Roles = "Farmer")]
+        public async Task<IActionResult> FarmerDashboard()
+        {
+            var userId = _userManager.GetUserId(User);
+            var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+            if (farmer == null) return Unauthorized();
+
+            var products = await _db.Products
+                .Where(p => p.FarmerId == farmer.FarmerId)
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
+
+            ViewBag.NewOrders = await _db.OrderItems
+                .Where(oi => oi.FarmerId == farmer.FarmerId && oi.Status == "Pending")
+                .CountAsync();
+
+            ViewBag.ActiveProducts = await _db.Products
+                .Where(p => p.FarmerId == farmer.FarmerId && p.StockQuantity > 0)
+                .CountAsync();
+
+            ViewBag.TotalCustomers = await _db.OrderItems
+                .Where(oi => oi.FarmerId == farmer.FarmerId)
+                .Select(oi => oi.Order.BuyerId)
+                .Distinct()
+                .CountAsync();
+
+            ViewBag.TotalRevenue = await _db.OrderItems
+                .Where(oi => oi.FarmerId == farmer.FarmerId && oi.Status == "Delivered")
+                .SumAsync(oi => oi.Price * oi.Quantity);
+
+            return View(products);
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Farmer")]
+        public async Task<IActionResult> GetStats()
+        {
+            var userId = _userManager.GetUserId(User);
+            var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+            if (farmer == null) return Unauthorized();
+
+            var stats = new
+            {
+                newOrders = await _db.OrderItems
+                    .Where(oi => oi.FarmerId == farmer.FarmerId && oi.Status == "Pending")
+                    .CountAsync(),
+                activeProducts = await _db.Products
+                    .Where(p => p.FarmerId == farmer.FarmerId && p.StockQuantity > 0)
+                    .CountAsync(),
+                totalCustomers = await _db.OrderItems
+                    .Where(oi => oi.FarmerId == farmer.FarmerId)
+                    .Select(oi => oi.Order.BuyerId)
+                    .Distinct()
+                    .CountAsync(),
+                totalRevenue = await _db.OrderItems
+                    .Where(oi => oi.FarmerId == farmer.FarmerId && oi.Status == "Delivered")
+                    .SumAsync(oi => oi.Price * oi.Quantity)
+            };
+
+            return Ok(stats);
+        }
+
+        public async Task<IActionResult> TopProductAnalytics()
+        {
+            var userId = _userManager.GetUserId(User);
+            var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+            if (farmer == null) return Unauthorized();
+
+            var topProducts = await _db.OrderItems
+                .Where(oi => oi.FarmerId == farmer.FarmerId && oi.Status == "Delivered")
+                .Include(oi => oi.Product)
+                .GroupBy(oi => oi.ProductId)
+                .Select(g => new TopProductViewModel
+                {
+                    Product = g.First().Product,
+                    TotalSold = g.Sum(oi => oi.Quantity),
+                    TotalRevenue = g.Sum(oi => oi.Price * oi.Quantity)
+                })
+                .OrderByDescending(x => x.TotalSold)
+                .Take(4)
+                .ToListAsync();
+
+            return PartialView("_TopProductAnalytics", topProducts);
+        }
+
+        // ----------------- BUYER -----------------
+        [Authorize(Roles = "Buyer")]
+        public async Task<IActionResult> BuyerDashboard()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            ViewBag.ActiveOrders = await _db.Orders
+                .Where(o => o.BuyerId == user.Id &&
+                           (o.Status == "Pending" || o.Status == "Processing" || o.Status == "Shipped"))
+                .CountAsync();
+
+            ViewBag.TotalSpent = await _db.Orders
+                .Where(o => o.BuyerId == user.Id && o.Status == "Delivered")
+                .SumAsync(o => o.TotalAmount);
+
+            ViewBag.TotalDeliveries = await _db.Orders
+                .Where(o => o.BuyerId == user.Id && o.Status == "Delivered")
+                .CountAsync();
+
+            var deliveredOrders = await _db.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .Where(o => o.BuyerId == user.Id && o.Status == "Delivered")
+                .ToListAsync();
+
+            decimal totalCarbonSaved = 0;
+            foreach (var order in deliveredOrders)
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    decimal carbonPerKg = 2.0m;
+                    totalCarbonSaved += (item.Quantity * carbonPerKg);
+                }
+            }
+
+            ViewBag.CarbonSaved = totalCarbonSaved;
+
+            var products = await _db.Products
+                .Include(p => p.FarmerProfile)
+                .OrderByDescending(p => p.Id)
+                .Take(6)
+                .ToListAsync();
+
+            return View("BuyerHome", products);
+        }
+
+        [Authorize(Roles = "Buyer")]
+        [HttpGet]
+        public async Task<IActionResult> GetBuyerDashboardStats()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            var activeOrders = await _db.Orders
+                .Where(o => o.BuyerId == user.Id &&
+                           (o.Status == "Pending" || o.Status == "Processing" || o.Status == "Shipped"))
+                .CountAsync();
+
+            var totalSpent = await _db.Orders
+                .Where(o => o.BuyerId == user.Id && o.Status == "Delivered")
+                .SumAsync(o => o.TotalAmount);
+
+            var totalDeliveries = await _db.Orders
+                .Where(o => o.BuyerId == user.Id && o.Status == "Delivered")
+                .CountAsync();
+
+            var deliveredOrders = await _db.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .Where(o => o.BuyerId == user.Id && o.Status == "Delivered")
+                .ToListAsync();
+
+            decimal totalCarbonSaved = 0;
+            foreach (var order in deliveredOrders)
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    decimal carbonPerKg = 2.0m;
+                    totalCarbonSaved += (item.Quantity * carbonPerKg);
+                }
+            }
+
+            return Json(new
+            {
+                activeOrders,
+                totalSpent,
+                totalDeliveries,
+                carbonSaved = totalCarbonSaved
+            });
         }
     }
 }

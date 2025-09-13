@@ -212,6 +212,73 @@ namespace FreshRoots.Migrations
                     b.ToTable("Farmers");
                 });
 
+            modelBuilder.Entity("FreshRoots.Models.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BuyerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuyerId");
+
+                    b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("FreshRoots.Models.OrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("FarmerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FarmerId");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OrderItems");
+                });
+
             modelBuilder.Entity("FreshRoots.Models.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -443,6 +510,44 @@ namespace FreshRoots.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("FreshRoots.Models.Order", b =>
+                {
+                    b.HasOne("FreshRoots.Models.ApplicationUser", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Buyer");
+                });
+
+            modelBuilder.Entity("FreshRoots.Models.OrderItem", b =>
+                {
+                    b.HasOne("FreshRoots.Models.Farmer", "Farmer")
+                        .WithMany()
+                        .HasForeignKey("FarmerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FreshRoots.Models.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FreshRoots.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Farmer");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("FreshRoots.Models.Product", b =>
                 {
                     b.HasOne("FreshRoots.Models.Farmer", "Farmer")
@@ -539,6 +644,11 @@ namespace FreshRoots.Migrations
             modelBuilder.Entity("FreshRoots.Models.Farmer", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("FreshRoots.Models.Order", b =>
+                {
+                    b.Navigation("OrderItems");
                 });
 #pragma warning restore 612, 618
         }

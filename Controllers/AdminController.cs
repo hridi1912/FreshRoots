@@ -55,7 +55,6 @@ namespace FreshRoots.Controllers
             return View(user);
         }
 
-
         [HttpPost, ActionName("DeleteUser")]
         public async Task<IActionResult> DeleteUserConfirmed(string id)
         {
@@ -67,10 +66,20 @@ namespace FreshRoots.Controllers
                 var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == id);
                 if (farmer != null)
                 {
-                    // Delete farmer's products
+                    // Delete farmer’s order items first
+                    var farmerProductIds = await _db.Products
+                        .Where(p => p.FarmerId == farmer.FarmerId)
+                        .Select(p => p.Id)
+                        .ToListAsync();
+
+                    var orderItems = _db.OrderItems.Where(oi => farmerProductIds.Contains(oi.ProductId));
+                    _db.OrderItems.RemoveRange(orderItems);
+
+                    // Delete farmer’s products
                     var products = _db.Products.Where(p => p.FarmerId == farmer.FarmerId);
                     _db.Products.RemoveRange(products);
 
+                    // Delete farmer row
                     _db.Farmers.Remove(farmer);
                 }
             }
@@ -89,12 +98,6 @@ namespace FreshRoots.Controllers
             await _db.SaveChangesAsync();
             return RedirectToAction("Users");
         }
-
-
-
-
-
-
 
         // ================= FARMERS =================
         public async Task<IActionResult> Farmers()
@@ -136,7 +139,16 @@ namespace FreshRoots.Controllers
             var farmer = await _db.Farmers.FindAsync(id);
             if (farmer == null) return NotFound();
 
-            // Delete all products
+            // Delete order items linked to farmer’s products
+            var farmerProductIds = await _db.Products
+                .Where(p => p.FarmerId == id)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            var orderItems = _db.OrderItems.Where(oi => farmerProductIds.Contains(oi.ProductId));
+            _db.OrderItems.RemoveRange(orderItems);
+
+            // Delete farmer’s products
             var products = _db.Products.Where(p => p.FarmerId == id);
             _db.Products.RemoveRange(products);
 
@@ -153,13 +165,6 @@ namespace FreshRoots.Controllers
             await _db.SaveChangesAsync();
             return RedirectToAction("Farmers");
         }
-
-
-
-
-
-
-
 
         // ================= BUYERS =================
         public async Task<IActionResult> Buyers()
@@ -200,10 +205,8 @@ namespace FreshRoots.Controllers
             var buyer = await _db.Buyers.FindAsync(id);
             if (buyer == null) return NotFound();
 
-            // Delete buyer row
             _db.Buyers.Remove(buyer);
 
-            // Delete linked user
             var user = await _db.Users.FindAsync(buyer.UserId);
             if (user != null)
             {
@@ -213,11 +216,6 @@ namespace FreshRoots.Controllers
             await _db.SaveChangesAsync();
             return RedirectToAction("Buyers");
         }
-
-
-
-
-
 
         // ================= PRODUCTS =================
         public async Task<IActionResult> Products()
@@ -258,18 +256,92 @@ namespace FreshRoots.Controllers
             var product = await _db.Products.FindAsync(id);
             if (product == null) return NotFound();
 
+            // ✅ Delete order items first
+            var orderItems = _db.OrderItems.Where(oi => oi.ProductId == id);
+            _db.OrderItems.RemoveRange(orderItems);
+
             _db.Products.Remove(product);
             await _db.SaveChangesAsync();
             return RedirectToAction("Products");
         }
 
-
-
-
-        // ================= ORDERS (future) =================
-        public IActionResult Orders()
+        // ================= ORDERS =================
+        public async Task<IActionResult> Orders()
         {
-            return Content("Orders management coming soon!");
+            var orderItems = await _db.OrderItems
+                .Include(oi => oi.Product)
+                .Include(oi => oi.Order)
+                .ToListAsync();
+
+            return View(orderItems);
+        }
+
+        public async Task<IActionResult> EditOrderItem(int id)
+        {
+            var orderItem = await _db.OrderItems
+                .Include(oi => oi.Order)
+                .FirstOrDefaultAsync(oi => oi.Id == id);
+
+            if (orderItem == null) return NotFound();
+
+            return View(orderItem);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditOrderItem(OrderItem model)
+        {
+            if (ModelState.IsValid)
+            {
+                var orderItem = await _db.OrderItems.FindAsync(model.Id);
+                if (orderItem == null) return NotFound();
+
+                orderItem.Price = model.Price;
+                orderItem.Quantity = model.Quantity;
+                orderItem.Status = model.Status;
+
+                _db.OrderItems.Update(orderItem);
+                await _db.SaveChangesAsync();
+
+                return RedirectToAction("Orders");
+            }
+            return View(model);
+        }
+
+        public async Task<IActionResult> DeleteOrderItem(int id)
+        {
+            var orderItem = await _db.OrderItems
+                .Include(oi => oi.Order)
+                .FirstOrDefaultAsync(oi => oi.Id == id);
+
+            if (orderItem == null) return NotFound();
+
+            return View(orderItem);
+        }
+
+        [HttpPost, ActionName("DeleteOrderItem")]
+        public async Task<IActionResult> DeleteOrderItemConfirmed(int id)
+        {
+            var orderItem = await _db.OrderItems
+                .Include(oi => oi.Order)
+                .FirstOrDefaultAsync(oi => oi.Id == id);
+
+            if (orderItem == null) return NotFound();
+
+            var order = orderItem.Order;
+
+            _db.OrderItems.Remove(orderItem);
+
+            var remainingItems = await _db.OrderItems
+                .Where(oi => oi.OrderId == order.Id)
+                .ToListAsync();
+
+            if (!remainingItems.Any())
+            {
+                _db.Orders.Remove(order);
+            }
+
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Orders");
         }
     }
 }

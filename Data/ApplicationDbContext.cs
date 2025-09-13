@@ -11,7 +11,8 @@ namespace FreshRoots.Data
         public DbSet<Product> Products => Set<Product>();
         public DbSet<Cart> Carts => Set<Cart>();
         public DbSet<CartItem> CartItems => Set<CartItem>();
-
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<Farmer> Farmers { get; set; }
         public DbSet<Buyer> Buyers { get; set; }
 
@@ -19,7 +20,7 @@ namespace FreshRoots.Data
         {
             base.OnModelCreating(builder);
 
-            // Farmer PK → force column to be FarmerId (not FarmerID)
+            // ----------------- Farmer -----------------
             builder.Entity<Farmer>()
                 .HasKey(f => f.FarmerId);
 
@@ -34,7 +35,7 @@ namespace FreshRoots.Data
                 .HasForeignKey<Farmer>(f => f.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Buyer PK → force column to be BuyerId (not BuyerID)
+            // ----------------- Buyer -----------------
             builder.Entity<Buyer>()
                 .HasKey(b => b.BuyerId);
 
@@ -49,7 +50,7 @@ namespace FreshRoots.Data
                 .HasForeignKey<Buyer>(b => b.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Product ↔ Farmer (N:1)
+            // ----------------- Product -----------------
             builder.Entity<Product>()
                 .HasOne(p => p.Farmer)
                 .WithMany(f => f.Products)
@@ -67,6 +68,36 @@ namespace FreshRoots.Data
             builder.Entity<Product>()
                 .Property(p => p.Price)
                 .HasPrecision(18, 2);
+
+            // ----------------- Orders -----------------
+            // Order -> Buyer
+            builder.Entity<Order>()
+                .HasOne(o => o.Buyer)
+                .WithMany()
+                .HasForeignKey(o => o.BuyerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // OrderItem -> Order
+            builder.Entity<OrderItem>()
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // OrderItem -> Product
+            builder.Entity<OrderItem>()
+                .HasOne(oi => oi.Product)
+                .WithMany()
+                .HasForeignKey(oi => oi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ✅ OrderItem -> Farmer (fix: link to Farmer not ApplicationUser)
+            builder.Entity<OrderItem>()
+                .HasOne(oi => oi.Farmer)
+                .WithMany()
+                .HasForeignKey(oi => oi.FarmerId)
+                .HasPrincipalKey(f => f.FarmerId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

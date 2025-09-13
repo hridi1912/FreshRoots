@@ -1,373 +1,249 @@
-﻿@model IEnumerable<FreshRoots.Models.Product>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Buyer Dashboard - FreshRoots</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+﻿using FreshRoots.Data;
+using FreshRoots.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-    <style>
-        :root {
-            --primary: #3a9949;
-            --primary-dark: #2a7c38;
-            --secondary: #f6b31d;
-            --light: #f9f9f9;
-            --dark: #2d2d2d;
-            --accent: #8bc34a;
+namespace FreshRoots.Controllers
+{
+    [Authorize]
+    public class OrdersController : Controller
+    {
+        private readonly ApplicationDbContext _db;
+        private readonly UserManager<ApplicationUser>
+    _userManager;
+
+    public OrdersController(ApplicationDbContext db, UserManager<ApplicationUser>
+        userManager)
+        {
+        _db = db;
+        _userManager = userManager;
         }
 
-        body {
-            font-family: 'Open Sans', sans-serif;
-            background-color: #f5f8f5;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        // ✅ Checkout page preview
+        public async Task<IActionResult>
+            Checkout()
+            {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
 
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Playfair Display', serif;
-            color: var(--dark);
-            font-weight: 700;
-        }
+            var cartItems = await _db.CartItems
+            .Include(c => c.Product)
+            .Include(c => c.Cart)
+            .Where(c => c.Cart.BuyerId == user.Id)
+            .ToListAsync();
 
-        /* Sidebar Styles */
-        .sidebar {
-            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
-            color: white;
-            width: 250px;
-            padding: 20px 0;
-            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
+            if (!cartItems.Any())
+            return RedirectToAction("Index", "Cart");
 
-        .sidebar-brand {
-            padding: 0 20px 20px;
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 20px;
-        }
+            var orderPreview = new Order
+            {
+            BuyerId = user.Id,
+            OrderDate = DateTime.Now,
+            Status = "Pending",
+            TotalAmount = cartItems.Sum(c => c.Quantity * c.Product.Price),
+            OrderItems = cartItems.Select(c => new OrderItem
+            {
+            ProductId = c.ProductId,
+            FarmerId = c.Product.FarmerId,
+            Quantity = c.Quantity,
+            Price = c.Product.Price,
+            Product = c.Product
+            }).ToList()
+            };
 
-            .sidebar-brand h2 {
-                color: white;
-                font-size: 24px;
-                margin: 0;
+            return View(orderPreview);
             }
 
-            .sidebar-brand span {
-                color: var(--secondary);
-            }
+            // ✅ Place Order
+            [HttpPost]
+            public async Task<IActionResult>
+                PlaceOrder()
+                {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null) return Unauthorized();
 
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            flex-grow: 1;
-        }
+                var cartItems = await _db.CartItems
+                .Include(c => c.Product)
+                .Include(c => c.Cart)
+                .Where(c => c.Cart.BuyerId == user.Id)
+                .ToListAsync();
 
-            .sidebar-menu li {
-                margin-bottom: 5px;
-            }
+                if (!cartItems.Any())
+                return RedirectToAction("Index", "Cart");
 
-            .sidebar-menu a {
-                color: rgba(255, 255, 255, 0.8);
-                text-decoration: none;
-                display: block;
-                padding: 12px 20px;
-                transition: all 0.3s;
-                border-left: 3px solid transparent;
-            }
-
-                .sidebar-menu a:hover, .sidebar-menu a.active {
-                    background: rgba(255, 255, 255, 0.1);
-                    color: white;
-                    border-left: 3px solid var(--secondary);
+                foreach (var item in cartItems)
+                {
+                item.Product.StockQuantity -= item.Quantity;
+                _db.Products.Update(item.Product);
                 }
 
-            .sidebar-menu i {
-                width: 25px;
-                margin-right: 10px;
-            }
+                var order = new Order
+                {
+                BuyerId = user.Id,
+                OrderDate = DateTime.Now,
+                Status = "Pending",
+                TotalAmount = cartItems.Sum(c => c.Quantity * c.Product.Price),
+                OrderItems = cartItems.Select(c => new OrderItem
+                {
+                ProductId = c.ProductId,
+                FarmerId = c.Product.FarmerId,
+                Quantity = c.Quantity,
+                Price = c.Product.Price,
+                Product = c.Product
+                }).ToList()
+                };
 
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            height: 100vh;
-        }
+                _db.Orders.Add(order);
+                _db.CartItems.RemoveRange(cartItems);
+                await _db.SaveChangesAsync();
 
-        .header {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 10px;
-            font-weight: bold;
-        }
-
-        /* Dashboard Cards */
-        .dashboard-card {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            margin-bottom: 20px;
-            transition: transform 0.3s;
-            height: 100%;
-        }
-
-            .dashboard-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            }
-
-        .card-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(58, 153, 73, 0.1);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-
-        .stat-number {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            color: #6c757d;
-            font-size: 14px;
-        }
-
-        .featured-products {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        /* Responsive */
-        .sidebar {
-            width: 100%;
-            height: auto;
-        }
-
-        .sidebar-menu {
-            display: flex;
-            overflow-x: auto;
-        }
-
-            .sidebar-menu li {
-                margin-bottom: 0;
-                margin-right: 5px;
-            }
-
-            .sidebar-menu a {
-                border-left: none;
-                border-bottom: 3px solid transparent;
-                padding: 10px 15px;
-                text-align: center;
-            }
-
-                .sidebar-menu a:hover, .sidebar-menu a.active {
-                    border-left: none;
-                    border-bottom: 3px solid var(--secondary);
+                return RedirectToAction("OrderConfirmation", new { orderId = order.Id });
                 }
 
-            .sidebar-menu span {
-                font-size: 12px;
-            }
-
-        .main-content {
-            height: auto;
-            overflow-y: visible;
-        }
-    </style>
-</head>
-<body>
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <ul class="sidebar-menu">
-            <li><a href="#" class="active"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
-            <li><a href="#"><i class="fas fa-store"></i> <span>Marketplace</span></a></li>
-            <li><a href="#"><i class="fas fa-shopping-cart"></i> <span>My Orders</span></a></li>
-            <li><a href="#"><i class="fas fa-heart"></i> <span>Wishlist</span></a></li>
-            <li><a href="#"><i class="fas fa-truck"></i> <span>Track Delivery</span></a></li>
-            <li><a href="#" id="profileLink"><i class="fas fa-user"></i> <span>Profile</span></a></li>
-            <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
-        </ul>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Header -->
-        <div class="header">
-            <h3>Welcome Back!</h3>
-            <div class="user-info">
-                <div class="user-avatar mb-3">
-                    @if (!string.IsNullOrEmpty(User.Identity.Name))
+                // ✅ Order Confirmation
+                public async Task<IActionResult>
+                    OrderConfirmation(int orderId)
                     {
-                        @User.Identity.Name[0]
-                    }
-                </div>
-                <div>
-                    <div>@User.Identity.Name</div>
-                    <small class="text-muted">Premium Member</small>
-                </div>
-            </div>
-        </div>
+                    var order = await _db.Orders
+                    .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                    .FirstOrDefaultAsync(o => o.Id == orderId);
 
-        <!-- Default content goes here -->
-        <div id="dashboardContent">
-            <div class="row">
-                <div class="col-md-3 col-sm-6 mb-4">
-                    <div class="dashboard-card">
-                        <div class="card-icon">
-                            <i class="fas fa-shopping-bag"></i>
-                        </div>
-                        <div class="stat-number">5</div>
-                        <div class="stat-label">Active Orders</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-4">
-                    <div class="dashboard-card">
-                        <div class="card-icon">
-                            <i class="fas fa-heart"></i>
-                        </div>
-                        <div class="stat-number">12</div>
-                        <div class="stat-label">Wishlisted Items</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-4">
-                    <div class="dashboard-card">
-                        <div class="card-icon">
-                            <i class="fas fa-store"></i>
-                        </div>
-                        <div class="stat-number">8</div>
-                        <div class="stat-label">Favorite Farms</div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-4">
-                    <div class="dashboard-card">
-                        <div class="card-icon">
-                            <i class="fas fa-truck"></i>
-                        </div>
-                        <div class="stat-number">2</div>
-                        <div class="stat-label">Deliveries Today</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    if (order == null) return NotFound();
 
-    <script>
-        async function loadProfile() {
-            try {
-                const response = await fetch('/Profile/ProfilePartial');
-                if (response.ok) {
-                    const content = await response.text();
-                    document.querySelector('.main-content').innerHTML = content;
-
-                    
-                    document.querySelectorAll('.sidebar-menu a').forEach(link => link.classList.remove('active'));
-                    document.getElementById('profileLink').classList.add('active');
-
-                    
-                    attachProfileFormHandler();
-                }
-            } catch (err) {
-                console.error("Error loading profile:", err);
-            }
-        }
-
-        function attachProfileFormHandler() {
-            const form = document.getElementById('profileForm');
-            if (!form) return;
-
-            form.addEventListener('submit', async function (e) {
-                e.preventDefault();
-
-                const fd = new FormData(form);
-                try {
-                    const res = await fetch(form.action, {
-                        method: 'POST',
-                        body: fd,
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                    });
-
-                    if (!res.ok) {
-                        alert('Failed to update profile.');
-                        return;
+                    return View(order);
                     }
 
-                    const html = await res.text();
-                    const temp = document.createElement('div');
-                    temp.innerHTML = html;
+                    // ✅ Buyer’s Orders
+                    public async Task<IActionResult>
+                        MyOrders()
+                        {
+                        var user = await _userManager.GetUserAsync(User);
+                        if (user == null) return Unauthorized();
 
-                    const newRoot = temp.querySelector('#profile-partial-root') || temp.firstElementChild;
-                    const oldRoot = document.querySelector('#profile-partial-root') || form.closest('.profile-container');
+                        var orders = await _db.Orders
+                        .Include(o => o.OrderItems)
+                        .ThenInclude(oi => oi.Product)
+                        .Where(o => o.BuyerId == user.Id)
+                        .OrderByDescending(o => o.OrderDate)
+                        .ToListAsync();
 
-                    if (newRoot && oldRoot) {
-                        oldRoot.replaceWith(newRoot);
-                    }
+                        return View(orders);
+                        }
 
-                    // Re-attach handler again after replacing
-                    attachProfileFormHandler();
-                } catch (err) {
-                    console.error(err);
-                    alert('An error occurred while updating your profile.');
-                }
-            });
-        }
+                        // ✅ Buyer’s Orders Partial
+                        public async Task<IActionResult>
+                            BuyersOrderPartial()
+                            {
+                            var user = await _userManager.GetUserAsync(User);
+                            if (user == null) return PartialView("BuyersOrderPartial", new List<Order>
+                                ());
 
-        function loadDashboard() {
-            window.location.reload();
-        }
+                                var orders = await _db.Orders
+                                .Include(o => o.OrderItems)
+                                .ThenInclude(oi => oi.Product)
+                                .Where(o => o.BuyerId == user.Id)
+                                .OrderByDescending(o => o.OrderDate)
+                                .Take(5)
+                                .ToListAsync();
 
-        document.addEventListener('DOMContentLoaded', function () {
-            const profileLink = document.getElementById('profileLink');
-            if (profileLink) {
-                profileLink.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    loadProfile();
-                });
-            }
-        });
-    </script>
-</body>
-</html>
+                                return PartialView("BuyersOrderPartial", orders);
+                                }
+
+                                // ✅ Farmer’s Orders
+                                [Authorize(Roles = "Farmer")]
+                                public async Task<IActionResult>
+                                    FarmerOrders()
+                                    {
+                                    var userId = _userManager.GetUserId(User);
+                                    var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+                                    if (farmer == null) return Unauthorized();
+
+                                    var orderItems = await _db.OrderItems
+                                    .Include(oi => oi.Order).ThenInclude(o => o.Buyer)
+                                    .Include(oi => oi.Product)
+                                    .Where(oi => oi.FarmerId == farmer.FarmerId)
+                                    .OrderByDescending(oi => oi.Order.OrderDate)
+                                    .ToListAsync();
+
+                                    return View("FarmerOrderPartial", orderItems);
+                                    }
+
+                                    // ✅ Update Order Status
+                                    [HttpPost]
+                                    [Authorize(Roles = "Farmer")]
+                                    [ValidateAntiForgeryToken]
+                                    public async Task<IActionResult>
+                                        UpdateOrderStatus(int orderItemId, string status)
+                                        {
+                                        var userId = _userManager.GetUserId(User);
+                                        var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+                                        if (farmer == null) return Unauthorized();
+
+                                        var orderItem = await _db.OrderItems
+                                        .Include(oi => oi.Order)
+                                        .FirstOrDefaultAsync(oi => oi.Id == orderItemId && oi.FarmerId == farmer.FarmerId);
+
+                                        if (orderItem == null) return NotFound();
+
+                                        orderItem.Status = status;
+                                        _db.OrderItems.Update(orderItem);
+
+                                        var orderItems = await _db.OrderItems
+                                        .Where(oi => oi.OrderId == orderItem.OrderId)
+                                        .ToListAsync();
+
+                                        if (orderItems.All(oi => oi.Status == "Delivered"))
+                                        orderItem.Order.Status = "Delivered";
+                                        else if (orderItems.All(oi => oi.Status == "Shipped"))
+                                        orderItem.Order.Status = "Shipped";
+                                        else if (orderItems.Any(oi => oi.Status == "Processing"))
+                                        orderItem.Order.Status = "Processing";
+                                        else if (orderItems.Any(oi => oi.Status == "Pending"))
+                                        orderItem.Order.Status = "Pending";
+
+                                        _db.Orders.Update(orderItem.Order);
+                                        await _db.SaveChangesAsync();
+
+                                        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                                        return Ok();
+
+                                        return RedirectToAction(nameof(FarmerOrders));
+                                        }
+
+                                        // ✅ Farmer’s Orders Partial
+                                        [Authorize(Roles = "Farmer")]
+                                        public async Task<IActionResult>
+                                            FarmerOrderPartial()
+                                            {
+                                            var userId = _userManager.GetUserId(User);
+                                            var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
+                                            if (farmer == null) return PartialView("FarmerOrderPartial", new List<OrderItem>
+                                                ());
+
+                                                var orderItems = await _db.OrderItems
+                                                .Include(oi => oi.Order).ThenInclude(o => o.Buyer)
+                                                .Include(oi => oi.Product)
+                                                .Where(oi => oi.FarmerId == farmer.FarmerId)
+                                                .OrderByDescending(oi => oi.Order.OrderDate)
+                                                .Take(10)
+                                                .ToListAsync();
+
+                                                return PartialView("FarmerOrderPartial", orderItems);
+                                                }
+                                                }
+
+                                                // ViewModel for Farmer Orders
+                                                public class FarmerOrderViewModel
+                                                {
+                                                public int OrderId { get; set; }
+                                                public DateTime OrderDate { get; set; }
+                                                public string BuyerId { get; set; }
+                                                public string Status { get; set; }
+                                                public List<OrderItem>
+                                                    Items { get; set; }
+                                                    public decimal TotalAmount { get; set; }
+                                                    }
+                                                    }

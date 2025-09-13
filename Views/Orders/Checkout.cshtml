@@ -1,0 +1,36 @@
+﻿@model FreshRoots.Models.Order
+
+<div class="container mt-5">
+    <h2>Checkout</h2>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderItems)
+            {
+                <tr>
+                    <td>@item.Product?.Name</td> <!-- safe navigation in case Product is null -->
+                    <td>৳@item.Price</td>
+                    <td>@item.Quantity</td>
+                    <td>৳@(item.Price* item.Quantity)</td>
+                </tr>
+            }
+            <tr class="table-success">
+                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                <td><strong>৳@Model.TotalAmount</strong></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <form asp-action="PlaceOrder" method="post">
+        <button type="submit" class="btn btn-success btn-lg">Confirm Order</button>
+        <a asp-controller="Cart" asp-action="Index" class="btn btn-secondary">Back to Cart</a>
+    </form>
+</div>
