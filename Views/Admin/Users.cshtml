@@ -1,0 +1,35 @@
+﻿@model IEnumerable<FreshRoots.Models.ApplicationUser>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Users";
+}
+
+<h2>Users</h2>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>Full Name</th>
+            <th>User Type</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.FullName</td>
+                <td>@user.UserType</td>
+                <td>@user.Email</td>
+                <td>@user.PhoneNumber</td>
+                <td>
+                    <a href="/Admin/EditUser/@user.Id" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="/Admin/DeleteUser/@user.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

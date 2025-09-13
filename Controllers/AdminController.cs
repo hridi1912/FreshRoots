@@ -1,14 +1,275 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using FreshRoots.Data;
+using FreshRoots.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace FreshRoots.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
+        private readonly ApplicationDbContext _db;
+
+        public AdminController(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
+        // ================= DASHBOARD =================
         public IActionResult Index()
         {
             return View();
+        }
+
+        // ================= USERS =================
+        public async Task<IActionResult> Users()
+        {
+            var users = await _db.Users.ToListAsync();
+            return View(users);
+        }
+
+        public async Task<IActionResult> EditUser(string id)
+        {
+            var user = await _db.Users.FindAsync(id);
+            if (user == null) return NotFound();
+            return View(user);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditUser(ApplicationUser model)
+        {
+            if (ModelState.IsValid)
+            {
+                _db.Users.Update(model);
+                await _db.SaveChangesAsync();
+                return RedirectToAction("Users");
+            }
+            return View(model);
+        }
+
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            var user = await _db.Users.FindAsync(id);
+            if (user == null) return NotFound();
+            return View(user);
+        }
+
+
+        [HttpPost, ActionName("DeleteUser")]
+        public async Task<IActionResult> DeleteUserConfirmed(string id)
+        {
+            var user = await _db.Users.FindAsync(id);
+            if (user == null) return NotFound();
+
+            if (user.UserType == "Farmer")
+            {
+                var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == id);
+                if (farmer != null)
+                {
+                    // Delete farmer's products
+                    var products = _db.Products.Where(p => p.FarmerId == farmer.FarmerId);
+                    _db.Products.RemoveRange(products);
+
+                    _db.Farmers.Remove(farmer);
+                }
+            }
+            else if (user.UserType == "Buyer")
+            {
+                var buyer = await _db.Buyers.FirstOrDefaultAsync(b => b.UserId == id);
+                if (buyer != null)
+                {
+                    _db.Buyers.Remove(buyer);
+                }
+            }
+
+            // Delete the user itself
+            _db.Users.Remove(user);
+
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Users");
+        }
+
+
+
+
+
+
+
+        // ================= FARMERS =================
+        public async Task<IActionResult> Farmers()
+        {
+            var farmers = await _db.Farmers.Include(f => f.User).ToListAsync();
+            return View(farmers);
+        }
+
+        public async Task<IActionResult> EditFarmer(int id)
+        {
+            var farmer = await _db.Farmers.FindAsync(id);
+            if (farmer == null) return NotFound();
+            return View(farmer);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditFarmer(Farmer model)
+        {
+            if (ModelState.IsValid)
+            {
+                _db.Farmers.Update(model);
+                await _db.SaveChangesAsync();
+                return RedirectToAction("Farmers");
+            }
+            return View(model);
+        }
+
+        public async Task<IActionResult> DeleteFarmer(int id)
+        {
+            var farmer = await _db.Farmers.FindAsync(id);
+            if (farmer == null) return NotFound();
+
+            return View(farmer);
+        }
+
+        [HttpPost, ActionName("DeleteFarmer")]
+        public async Task<IActionResult> DeleteFarmerConfirmed(int id)
+        {
+            var farmer = await _db.Farmers.FindAsync(id);
+            if (farmer == null) return NotFound();
+
+            // Delete all products
+            var products = _db.Products.Where(p => p.FarmerId == id);
+            _db.Products.RemoveRange(products);
+
+            // Delete farmer row
+            _db.Farmers.Remove(farmer);
+
+            // Delete linked user
+            var user = await _db.Users.FindAsync(farmer.UserId);
+            if (user != null)
+            {
+                _db.Users.Remove(user);
+            }
+
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Farmers");
+        }
+
+
+
+
+
+
+
+
+        // ================= BUYERS =================
+        public async Task<IActionResult> Buyers()
+        {
+            var buyers = await _db.Buyers.Include(b => b.User).ToListAsync();
+            return View(buyers);
+        }
+
+        public async Task<IActionResult> EditBuyer(int id)
+        {
+            var buyer = await _db.Buyers.FindAsync(id);
+            if (buyer == null) return NotFound();
+            return View(buyer);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditBuyer(Buyer model)
+        {
+            if (ModelState.IsValid)
+            {
+                _db.Buyers.Update(model);
+                await _db.SaveChangesAsync();
+                return RedirectToAction("Buyers");
+            }
+            return View(model);
+        }
+
+        public async Task<IActionResult> DeleteBuyer(int id)
+        {
+            var buyer = await _db.Buyers.FindAsync(id);
+            if (buyer == null) return NotFound();
+            return View(buyer);
+        }
+
+        [HttpPost, ActionName("DeleteBuyer")]
+        public async Task<IActionResult> DeleteBuyerConfirmed(int id)
+        {
+            var buyer = await _db.Buyers.FindAsync(id);
+            if (buyer == null) return NotFound();
+
+            // Delete buyer row
+            _db.Buyers.Remove(buyer);
+
+            // Delete linked user
+            var user = await _db.Users.FindAsync(buyer.UserId);
+            if (user != null)
+            {
+                _db.Users.Remove(user);
+            }
+
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Buyers");
+        }
+
+
+
+
+
+
+        // ================= PRODUCTS =================
+        public async Task<IActionResult> Products()
+        {
+            var products = await _db.Products.ToListAsync();
+            return View(products);
+        }
+
+        public async Task<IActionResult> EditProduct(int id)
+        {
+            var product = await _db.Products.FindAsync(id);
+            if (product == null) return NotFound();
+            return View(product);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditProduct(Product model)
+        {
+            if (ModelState.IsValid)
+            {
+                _db.Products.Update(model);
+                await _db.SaveChangesAsync();
+                return RedirectToAction("Products");
+            }
+            return View(model);
+        }
+
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var product = await _db.Products.FindAsync(id);
+            if (product == null) return NotFound();
+            return View(product);
+        }
+
+        [HttpPost, ActionName("DeleteProduct")]
+        public async Task<IActionResult> DeleteProductConfirmed(int id)
+        {
+            var product = await _db.Products.FindAsync(id);
+            if (product == null) return NotFound();
+
+            _db.Products.Remove(product);
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Products");
+        }
+
+
+
+
+        // ================= ORDERS (future) =================
+        public IActionResult Orders()
+        {
+            return Content("Orders management coming soon!");
         }
     }
 }

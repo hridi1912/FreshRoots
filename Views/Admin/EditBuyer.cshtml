@@ -1,0 +1,33 @@
+﻿@model FreshRoots.Models.Buyer
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Buyer";
+}
+
+<h2>Edit Buyer</h2>
+<form asp-action="EditBuyer" method="post">
+    <input type="hidden" asp-for="BuyerId" />
+
+    <div class="mb-3">
+        <label asp-for="UserId" class="form-label"></label>
+        <input asp-for="UserId" class="form-control" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label"></label>
+        <input asp-for="FullName" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PhoneNumber" class="form-label"></label>
+        <input asp-for="PhoneNumber" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="/Admin/Buyers" class="btn btn-secondary">Cancel</a>
+</form>
