@@ -70,7 +70,11 @@ namespace FreshRoots.Controllers
 
             if (!cartItems.Any())
                 return RedirectToAction("Index", "Cart");
-
+            foreach (var item in cartItems)
+            {
+                item.Product.StockQuantity -= item.Quantity;
+                _db.Products.Update(item.Product);
+            }
             var order = new Order
             {
                 BuyerId = user.Id,
