@@ -153,6 +153,7 @@ namespace FreshRoots.Controllers
 
             if (product is null) return NotFound();
 
+            // Update image if new one uploaded
             if (imageFile != null && imageFile.Length > 0)
             {
                 if (!string.IsNullOrWhiteSpace(product.ImageUrl))
@@ -164,6 +165,7 @@ namespace FreshRoots.Controllers
                 product.ImageUrl = await SaveImage(imageFile);
             }
 
+            // Update fields
             product.Name = model.Name;
             product.Description = model.Description;
             product.Price = model.Price;
@@ -177,9 +179,12 @@ namespace FreshRoots.Controllers
 
             await _db.SaveChangesAsync();
 
-            TempData["Msg"] = "Product updated.";
-            return RedirectToAction(nameof(Manage));
+            // ✅ Show success message on the same page
+            ViewBag.Msg = "✅ Product updated successfully.";
+
+            return View(product);
         }
+
 
         [HttpPost]
         [Authorize(Roles = "Farmer")]

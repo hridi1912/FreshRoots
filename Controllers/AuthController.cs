@@ -154,6 +154,13 @@ namespace FreshRoots.Controllers
                 return View(model);
             }
 
+            // 🔹 Check if chosen role matches stored role
+            if (!string.Equals(user.UserType, model.Role, StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError("", $"You have registered as {user.UserType}. Please select {user.UserType}.");
+                return View(model);
+            }
+
             var loginResult = await _signInManager.PasswordSignInAsync(
                 user.UserName,
                 model.Password,
