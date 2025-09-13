@@ -2,6 +2,7 @@
     Layout = "_Layout"; // Add this line to use the main layout
 }
 @model IEnumerable<FreshRoots.Models.Product>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,18 +20,22 @@
     <div class="sidebar">
 
         <ul class="sidebar-menu">
-            <li><a href="#" class="active"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+            <li><a href="#" onclick="loadDashboard();return false;"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
             <li>
-                <a asp-controller="Products" asp-action="Manage">
-                    <i class="fas fa-seedling"></i> <span>Products</span>
+                <a href="#products" onclick="loadFarmerProducts(); return false;">
+                    <i class="fas fa-seedling"></i> <span>My Products</span>
                 </a>
             </li>
             <li><a href="#orders" class="orders-link"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
-            <li><a href="#profile"><i class="fas fa-user"></i> <span>Profile</span></a></li>
-            <li><a href="#"><i class="fas fa-chart-line"></i> <span>Analytics</span></a></li>
+            <li>
+                <a href="#analytics" onclick="loadAnalytics(); return false;">
+                    <i class="fas fa-chart-line"></i> <span>Analytics</span>
+                </a>
+            </li>
+            <li><a href="#profile" onclick="loadProfile(); return false;"><i class="fas fa-user"></i> <span>Profile</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i> <span>Delivery</span></a></li>
             <li><a href="#"><i class="fas fa-users"></i> <span>Customers</span></a></li>
-            <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+            @* <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li> *@
             @* <li><a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li> *@
         </ul>
     </div>
@@ -56,40 +61,47 @@
 
         <!-- Stats Cards -->
         <div class="row">
+            <!-- New Orders -->
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="dashboard-card">
                     <div class="card-icon">
                         <i class="fas fa-shopping-cart"></i>
                     </div>
-                    <div class="stat-number">24</div>
+                    <div class="stat-number">@(ViewBag.NewOrders ?? 0)</div>
                     <div class="stat-label">New Orders</div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="dashboard-card">
-                    <div class="card-icon">
-                        <i class="fas fa-seedling"></i>
-                    </div>
-                    <div class="stat-number">15</div>
-                    <div class="stat-label">Active Products</div>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="dashboard-card">
-                    <div class="card-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-number">128</div>
-                    <div class="stat-label">Total Customers</div>
-                </div>
-            </div>
+
+            <!-- Total Revenue -->
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="dashboard-card">
                     <div class="card-icon">
                         <i class="fas fa-dollar-sign"></i>
                     </div>
-                    <div class="stat-number">$2,845</div>
+                    <div class="stat-number">$@(((decimal)(ViewBag.TotalRevenue ?? 0)).ToString("N0"))</div>
                     <div class="stat-label">Total Revenue</div>
+                </div>
+            </div>
+
+            <!-- Total Customers -->
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">@(ViewBag.TotalCustomers ?? 0)</div>
+                    <div class="stat-label">Total Customers</div>
+                </div>
+            </div>
+
+            <!-- Active Products -->
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="stat-number">@(ViewBag.ActiveProducts ?? 0)</div>
+                    <div class="stat-label">Active Products</div>
                 </div>
             </div>
         </div>
@@ -100,7 +112,7 @@
                 <!-- Products Table -->
                 <div class="products-table">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4>My Products</h4>
+                        <h4>Products in market</h4>
                         <a asp-controller="Products" asp-action="Create" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Add Product
                         </a>
@@ -113,7 +125,7 @@
                                     <th>Price</th>
                                     <th>Stock</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody>
@@ -126,7 +138,7 @@
                                                 <div>@p.Name</div>
                                             </div>
                                         </td>
-                                        <td>৳@p.Price.ToString("N2")</td>
+                                        <td>৳@p.Price</td>
                                         <td>@p.StockQuantity</td>
                                         <td>
                                             @if (p.StockQuantity > 0)
@@ -138,20 +150,7 @@
                                                 <span class="status-badge status-inactive">Out of Stock</span>
                                             }
                                         </td>
-                                        <td>
-                                            <a class="btn btn-sm btn-outline-primary me-1"
-                                               asp-controller="Products" asp-action="Edit" asp-route-id="@p.Id">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form asp-controller="Products" asp-action="Delete" method="post" class="d-inline">
-                                                <input type="hidden" name="id" value="@p.Id" />
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('Delete @p.Name?');">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
+                                        
                                     </tr>
                                 }
                             </tbody>
@@ -282,6 +281,57 @@
                 }
             }, 3000);
         }
+        // ===== ANALYTICS LOADING =====
+        async function loadAnalytics() {
+                    try {
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading analytics...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/Products/TopProductAnalytics');
+                if (response.ok) {
+                    const content = await response.text();
+                    mainContent.innerHTML = content;
+
+                    // Update active menu item
+                    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    document.querySelector('.sidebar-menu a[href="#analytics"]').classList.add('active');
+                } else {
+                    throw new Error('Failed to load analytics');
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                document.querySelector('.main-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Error loading analytics</h4>
+                        <p>There was a problem loading your analytics. Please try again.</p>
+                        <button onclick="loadDashboard()" class="btn btn-primary">Return to Dashboard</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ===== REFRESH ANALYTICS =====
+        async function refreshAnalytics() {
+            try {
+                const analyticsContent = document.getElementById('analytics-content');
+                if (analyticsContent && analyticsContent.innerHTML.includes('top-product-item')) {
+                    const response = await fetch('/Products/TopProductsAnalytics');
+                    if (response.ok) {
+                        const content = await response.text();
+                        analyticsContent.innerHTML = content;
+                    }
+                }
+            } catch (error) {
+                console.error('Error refreshing analytics:', error);
+            }
+        }
 
         // ===== FULL ORDERS PAGE LOADING =====
         async function loadOrdersPage() {
@@ -319,6 +369,122 @@
                         <button onclick="loadDashboard()" class="btn btn-primary">Return to Dashboard</button>
                     </div>
                 `;
+            }
+        }
+
+                async function loadFarmerProducts() {
+            const mainContent = document.querySelector('.main-content');
+            const response = await fetch('/Products/Manage');
+            if (response.ok) {
+                mainContent.innerHTML = await response.text();
+            } else {
+                alert('Failed to load products.');
+            }
+        }
+        // ===== FASTER FARMER STATS ANIMATION =====
+function animateFarmerValue(element, start, end, duration, isCurrency = false) {
+    const range = end - start;
+    const startTime = performance.now();
+    
+    function updateValue(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Quadratic ease-out function for smoother animation
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        
+        const currentValue = start + (range * easedProgress);
+        
+        if (isCurrency) {
+            element.textContent = '$' + Math.round(currentValue).toLocaleString();
+        } else {
+            element.textContent = Math.round(currentValue).toLocaleString();
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateValue);
+        }
+    }
+    
+    requestAnimationFrame(updateValue);
+}
+
+// Function to animate all farmer stats - FASTER VERSION
+function animateFarmerStats() {
+    const statElements = document.querySelectorAll('.stat-number');
+    
+    statElements.forEach((element, index) => {
+        const text = element.textContent;
+        let finalValue;
+        
+        if (text.includes('$')) {
+            finalValue = parseFloat(text.replace(/[^\d.]/g, ''));
+        } else {
+            finalValue = parseInt(text.replace(/\D/g, '')) || 0;
+        }
+        
+        // Skip if value is 0
+        if (finalValue === 0) return;
+        
+        // Faster animation for initial load
+        const duration = 800; // Reduced from 1500ms to 800ms
+        
+        // Set initial value to 0
+        if (index === 1) { // Total Revenue (currency)
+            element.textContent = '$0';
+            animateFarmerValue(element, 0, finalValue, duration, true);
+        } else { // Other stats (numbers)
+            element.textContent = '0';
+            animateFarmerValue(element, 0, finalValue, duration, false);
+        }
+    });
+}
+
+               // ===== REFRESH STATS =====
+        async function refreshStats() {
+            if (isUpdatingStats) return;
+            isUpdatingStats = true;
+
+            try {
+                // Add cache busting to prevent browser caching
+                const response = await fetch('/Products/GetStats?t=' + Date.now());
+                if (response.ok) {
+                    const stats = await response.json();
+
+                    // Update the stats cards
+                    const statNumbers = document.querySelectorAll('.stat-number');
+                    if (statNumbers.length >= 4) {
+                        // Store current values
+                        const currentValues = [
+                            parseInt(statNumbers[0].textContent.replace(/\D/g, '')) || 0,
+                            parseFloat(statNumbers[1].textContent.replace(/[^\d.]/g, '')) || 0,
+                            parseInt(statNumbers[2].textContent.replace(/\D/g, '')) || 0,
+                            parseInt(statNumbers[3].textContent.replace(/\D/g, '')) || 0
+                        ];
+
+                        // Animate to new values if they changed (use animateFarmerValue)
+                        if (currentValues[0] !== stats.newOrders) {
+                            animateFarmerValue(statNumbers[0], currentValues[0], stats.newOrders, 600, false);
+                        }
+
+                        if (currentValues[1] !== stats.totalRevenue) {
+                            animateFarmerValue(statNumbers[1], currentValues[1], stats.totalRevenue, 600, true);
+                        }
+
+                        if (currentValues[2] !== stats.totalCustomers) {
+                            animateFarmerValue(statNumbers[2], currentValues[2], stats.totalCustomers, 600, false);
+                        }
+
+                        if (currentValues[3] !== stats.activeProducts) {
+                            animateFarmerValue(statNumbers[3], currentValues[3], stats.activeProducts, 600, false);
+                        }
+                    }
+                    await refreshAnalytics();
+                }
+            } catch (error) {
+                console.error('Error refreshing stats:', error);
+            } finally {
+                isUpdatingStats = false;
             }
         }
 
@@ -450,10 +616,23 @@
             window.location.reload();
         }
 
-        // ===== INITIAL SETUP =====
+                // ===== INITIAL SETUP =====
         document.addEventListener('DOMContentLoaded', function() {
+            // Call the correct function for farmer stats animation
+            animateFarmerStats(); // Changed from animateStats() to animateFarmerStats()
+
             // Load farmer orders on page load
             loadFarmerOrders();
+
+            // Set up periodic stats refresh with cache busting
+            statsUpdateInterval = setInterval(refreshStats, 45000);
+
+            // Clean up interval when page is unloaded
+            window.addEventListener('beforeunload', function() {
+                if (statsUpdateInterval) {
+                    clearInterval(statsUpdateInterval);
+                }
+            });
 
             // Profile link
             const profileLink = document.querySelector('.sidebar-menu a[href="#profile"]');
@@ -464,22 +643,31 @@
                 });
             }
 
-            // Orders link - FIXED: Use loadOrdersPage instead of loadOrders
+            // Orders link
             const ordersLink = document.querySelector('.sidebar-menu a.orders-link');
             if (ordersLink) {
                 ordersLink.addEventListener('click', function(e) {
                     e.preventDefault();
-                    loadOrdersPage(); // Changed to loadOrdersPage
+                    loadOrdersPage();
+                });
+            }
+
+            // Analytics link
+            const analyticsLink = document.querySelector('.sidebar-menu a[href="#analytics"]');
+            if (analyticsLink) {
+                analyticsLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loadAnalytics();
                 });
             }
 
             // Other sidebar links
-            const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"]):not(.orders-link)');
+            const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"]):not(.orders-link):not([href="#products"]):not([href="#analytics"]):not([href="#"])');
             otherLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     const span = this.querySelector('span');
-                    alert('This feature would load: ' + (span ? span.textContent : 'unknown feature'));
+                    showNotification(`${span ? span.textContent : 'This feature'} is coming soon!`, 'info');
                 });
             });
 

@@ -22,13 +22,13 @@
                     <td>@item.Product?.Name</td>
                     <td>৳@item.Price.ToString("N2")</td>
                     <td>@item.Quantity</td>
-                    <td>৳@(item.Price* item.Quantity).ToString("N2")</td>
+                    <td>৳@(item.Price* item.Quantity)</td>
                 </tr>
             }
         </tbody>
     </table>
 
     <a asp-controller="Products" asp-action="Index" class="btn btn-primary">Continue Shopping</a>
-    <a asp-action="MyOrders" class="btn btn-secondary">View My Orders</a>
+    @* <a asp-controller="Orders" asp-action="BuyerOrderPartial" class="btn btn-secondary">View My Orders</a> *@
 </div>
 
