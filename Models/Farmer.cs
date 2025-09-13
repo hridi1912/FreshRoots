@@ -6,7 +6,7 @@ namespace FreshRoots.Models
     public class Farmer
     {
         [Key]
-        public int FarmerID { get; set; }
+        public int FarmerId { get; set; }
 
         [Required]
         [ForeignKey("ApplicationUser")]
@@ -17,6 +17,9 @@ namespace FreshRoots.Models
         public string? Address { get; set; }
         public string? PickupLocation { get; set; }
         public string? ProfilePicture { get; set; }
+
+        public ICollection<Product> Products { get; set; }
+
 
         public ApplicationUser User { get; set; } = null!;
     }

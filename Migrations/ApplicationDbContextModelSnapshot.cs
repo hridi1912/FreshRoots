@@ -100,11 +100,12 @@ namespace FreshRoots.Migrations
 
             modelBuilder.Entity("FreshRoots.Models.Buyer", b =>
                 {
-                    b.Property<int>("BuyerID")
+                    b.Property<int>("BuyerId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("BuyerId");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BuyerID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BuyerId"));
 
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
@@ -122,7 +123,7 @@ namespace FreshRoots.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("BuyerID");
+                    b.HasKey("BuyerId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -177,11 +178,12 @@ namespace FreshRoots.Migrations
 
             modelBuilder.Entity("FreshRoots.Models.Farmer", b =>
                 {
-                    b.Property<int>("FarmerID")
+                    b.Property<int>("FarmerId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("FarmerId");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FarmerID"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FarmerId"));
 
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
@@ -202,7 +204,7 @@ namespace FreshRoots.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("FarmerID");
+                    b.HasKey("FarmerId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -228,6 +230,9 @@ namespace FreshRoots.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<int>("FarmerId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("HarvestDate")
                         .HasColumnType("datetime2");
 
@@ -247,6 +252,8 @@ namespace FreshRoots.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("FarmerId");
 
                     b.ToTable("Products");
                 });
@@ -438,6 +445,12 @@ namespace FreshRoots.Migrations
 
             modelBuilder.Entity("FreshRoots.Models.Product", b =>
                 {
+                    b.HasOne("FreshRoots.Models.Farmer", "Farmer")
+                        .WithMany("Products")
+                        .HasForeignKey("FarmerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.OwnsOne("FreshRoots.Models.FarmerProfile", "FarmerProfile", b1 =>
                         {
                             b1.Property<int>("ProductId")
@@ -460,6 +473,8 @@ namespace FreshRoots.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("ProductId");
                         });
+
+                    b.Navigation("Farmer");
 
                     b.Navigation("FarmerProfile")
                         .IsRequired();
@@ -519,6 +534,11 @@ namespace FreshRoots.Migrations
             modelBuilder.Entity("FreshRoots.Models.Cart", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("FreshRoots.Models.Farmer", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

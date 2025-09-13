@@ -6,7 +6,7 @@ namespace FreshRoots.Models
     public class Buyer
     {
         [Key]
-        public int BuyerID { get; set; }
+        public int BuyerId { get; set; }
 
         [Required]
         [ForeignKey("ApplicationUser")]

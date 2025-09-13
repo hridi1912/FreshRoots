@@ -1,4 +1,7 @@
 ﻿@model FreshRoots.Models.ProfileViewModel
+@{
+    string cacheBuster = DateTime.Now.Ticks.ToString(); // prevents stale image
+}
 <link rel="stylesheet" href="~/css/_ProfilePartial.css" asp-append-version="true" />
 
 <div id="profile-partial-root" class="profile-container">
@@ -18,14 +21,23 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-body text-center">
-                    <div class="user-avatar-large mb-3">
-                        @if (!string.IsNullOrEmpty(Model.FullName))
+                    <div class="d-flex flex-column align-items-center">
+                        @if (!string.IsNullOrWhiteSpace(Model.ProfilePicture))
                         {
-                            @Model.FullName[0]
+                            <img src="@($"{Model.ProfilePicture}?t={cacheBuster}")" alt="Profile picture"
+                                 style="width:90px;height:90px;object-fit:cover"
+                                 class="rounded-circle mb-3 border" />
                         }
+                        else if (!string.IsNullOrEmpty(Model.FullName))
+                        {
+                            <div class="user-avatar-large mb-3">
+                                @Model.FullName[0]
+                            </div>
+                        }
+
+                        <h4 class="mb-0">@Model.FullName</h4>
+                        <p class="text-muted mb-0">@ViewBag.ProfileType</p>
                     </div>
-                    <h4>@Model.FullName</h4>
-                    <p class="text-muted">@ViewBag.ProfileType</p>
                 </div>
             </div>
         </div>
@@ -40,31 +52,27 @@
                     <form id="profileForm"
                           asp-action="ProfilePartial"
                           asp-controller="Profile"
-                          method="post">
+                          method="post"
+                          enctype="multipart/form-data">
                         @Html.AntiForgeryToken()
 
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label asp-for="FullName" class="form-label"></label>
                                 <input asp-for="FullName" class="form-control" />
-                                <span asp-validation-for="FullName" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
                                 <label asp-for="PhoneNumber" class="form-label"></label>
                                 <input asp-for="PhoneNumber" class="form-control" />
-                                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                             </div>
                         </div>
 
-                        <!-- Email row (read-only) -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label asp-for="Email" class="form-label"></label>
                                 <input asp-for="Email" class="form-control" readonly />
-                                <span asp-validation-for="Email" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
-                                <!-- keep column alignment -->
                                 <input type="hidden" name="UserType" value="@ViewBag.ProfileType" />
                             </div>
                         </div>
@@ -73,22 +81,19 @@
                             <div class="col-md-6">
                                 <label asp-for="Address" class="form-label"></label>
                                 <input asp-for="Address" class="form-control" />
-                                <span asp-validation-for="Address" class="text-danger"></span>
                             </div>
                             <div class="col-md-6">
                                 @if (ViewBag.ProfileType == "Farmer")
                                 {
                                     <label asp-for="PickupLocation" class="form-label"></label>
                                     <input asp-for="PickupLocation" class="form-control" />
-                                    <span asp-validation-for="PickupLocation" class="text-danger"></span>
                                 }
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="ProfilePicture" class="form-label"></label>
-                            <input asp-for="ProfilePicture" class="form-control" />
-                            <span asp-validation-for="ProfilePicture" class="text-danger"></span>
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" name="profileImageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" />
                         </div>
 
                         <div class="d-flex gap-2">
@@ -102,98 +107,6 @@
                     </form>
                 </div>
             </div>
-
-            <div class="card mt-4">
-                <div class="card-body">
-                    <h5>Account Statistics</h5>
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <div class="stat-number">12</div>
-                            <div class="stat-label">Total Orders</div>
-                        </div>
-                        <div class="col-4">
-                            <div class="stat-number">8</div>
-                            <div class="stat-label">Favorite Items</div>
-                        </div>
-                        <div class="col-4">
-                            <div class="stat-number">4</div>
-                            <div class="stat-label">Saved Farms</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
-
-<script>
-    // Intercept submit and update the partial in-place so we don't navigate away
-    (function () {
-        const form = document.getElementById('profileForm');
-        if (!form) return;
-
-        form.addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const fd = new FormData(form);
-            try {
-                const res = await fetch(form.action, {
-                    method: 'POST',
-                    body: fd,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-
-                if (!res.ok) {
-                    alert('Failed to update profile.');
-                    return;
-                }
-
-                const html = await res.text();
-                const temp = document.createElement('div');
-                temp.innerHTML = html;
-
-                const newRoot = temp.querySelector('#profile-partial-root') || temp.firstElementChild;
-                const oldRoot = document.querySelector('#profile-partial-root') || form.closest('.profile-container');
-
-                if (newRoot && oldRoot) {
-                    oldRoot.replaceWith(newRoot);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('An error occurred while updating your profile.');
-            }
-        });
-    })();
-</script>
-
-<style>
-    .user-avatar-large {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        font-weight: bold;
-        margin: 0 auto;
-    }
-
-    .profile-container {
-        animation: fadeIn 0.3s ease-in;
-    }
-
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-</style>

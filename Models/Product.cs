@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FreshRoots.Models
 {
@@ -19,7 +20,6 @@ namespace FreshRoots.Models
         [Range(0, 100000)]
         public int StockQuantity { get; set; }
 
-        // Stores relative web path like /images/products/abcd.png
         public string? ImageUrl { get; set; }
 
         [Required, StringLength(64)]
@@ -28,6 +28,13 @@ namespace FreshRoots.Models
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime HarvestDate { get; set; } = DateTime.Today;
+
+        
+        [Required]
+        [ForeignKey("Farmer")]
+        public int FarmerId { get; set; }
+        public Farmer? Farmer { get; set; }
+        
 
         public FarmerProfile FarmerProfile { get; set; } = new FarmerProfile();
     }
