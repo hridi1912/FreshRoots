@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FreshRoots.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250914115444_InitialCreate")]
+    [Migration("20250914202836_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -565,12 +565,10 @@ namespace FreshRoots.Migrations
                                 .HasColumnType("int");
 
                             b1.Property<string>("Certification")
-                                .IsRequired()
                                 .HasMaxLength(120)
                                 .HasColumnType("nvarchar(120)");
 
                             b1.Property<string>("FarmName")
-                                .IsRequired()
                                 .HasMaxLength(120)
                                 .HasColumnType("nvarchar(120)");
 

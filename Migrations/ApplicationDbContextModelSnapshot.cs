@@ -562,12 +562,10 @@ namespace FreshRoots.Migrations
                                 .HasColumnType("int");
 
                             b1.Property<string>("Certification")
-                                .IsRequired()
                                 .HasMaxLength(120)
                                 .HasColumnType("nvarchar(120)");
 
                             b1.Property<string>("FarmName")
-                                .IsRequired()
                                 .HasMaxLength(120)
                                 .HasColumnType("nvarchar(120)");
 

@@ -261,8 +261,8 @@ namespace FreshRoots.Migrations
                     Category = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: false),
                     HarvestDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     FarmerId = table.Column<int>(type: "int", nullable: false),
-                    FarmerProfile_FarmName = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: false),
-                    FarmerProfile_Certification = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: false)
+                    FarmerProfile_FarmName = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: true),
+                    FarmerProfile_Certification = table.Column<string>(type: "nvarchar(120)", maxLength: 120, nullable: true)
                 },
                 constraints: table =>
                 {
