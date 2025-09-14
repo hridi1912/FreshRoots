@@ -19,7 +19,7 @@
 
         <ul class="sidebar-menu">
             <li><a href="#" class="active"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
-            <li><a href="#"><i class="fas fa-store"></i> <span>Marketplace</span></a></li>
+            <li><a href="/Products/Index"><i class="fas fa-store"></i> <span>Marketplace</span></a></li>
             <li><a href="#orders" class="orders-link"> <i class="fas fa-shopping-cart"></i> <span>My Orders</span></a></li>
             @* <li><a href="#"><i class="fas fa-heart"></i> <span>Wishlist</span></a></li> *@
             <li><a href="#"><i class="fas fa-truck"></i> <span>Track Delivery</span></a></li>
@@ -672,8 +672,11 @@
                 }
                     loadRecentOrdersForDashboard();
 
-                // Other sidebar links
-                const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"]):not(.orders-link):not([href="#"])');
+                // Other sidebar links (exclude Marketplace too)
+                const otherLinks = document.querySelectorAll(
+                    '.sidebar-menu a:not([href="#profile"]):not(.orders-link):not([href="#"]):not([href="/Products/Index"])'
+                );
+
                 otherLinks.forEach(link => {
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
