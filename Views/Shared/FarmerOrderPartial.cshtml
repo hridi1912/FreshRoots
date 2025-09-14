@@ -1,0 +1,156 @@
+﻿@model IEnumerable<FreshRoots.Models.OrderItem>
+@{
+    Layout = null; // Add this line to use the main layout
+    ViewData["Title"] = "My Orders - Farmer";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Orders</h2>
+        @* <button onclick="window.location.href='/'" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+        </button> *@
+    </div>
+
+    <div class="orders-container">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var item in Model)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">Order #@item.OrderId - @item.Product?.Name</h5>
+                                <small class="text-muted">
+                                    Ordered on @item.Order?.OrderDate.ToString("MMMM dd, yyyy hh:mm tt") |
+                                    Customer: @item.Order?.Buyer?.UserName
+                                </small>
+                            </div>
+                            <div>
+                                <span class="badge @GetStatusBadgeClass(item.Status)">@item.Status</span>
+                                <strong class="ms-2">৳@((item.Price * item.Quantity).ToString("N2"))</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Product Details</h6>
+                                <div class="d-flex align-items-center">
+                                    <img src="@(item.Product?.ImageUrl ?? "/images/default.png")"
+                                         class="rounded me-3" width="60" height="60"
+                                         style="object-fit:cover" alt="@item.Product?.Name" />
+                                    <div>
+                                        <strong>@item.Product?.Name</strong>
+                                        <div class="text-muted">Qty: @item.Quantity</div>
+                                        <div class="text-muted">Price: ৳@item.Price.ToString("N2") each</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Update Status</h6>
+                                <form asp-controller="Orders" asp-action="UpdateOrderStatus" method="post" class="status-update-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="orderItemId" value="@item.Id" />
+
+                                    <div class="input-group">
+                                        <select name="status" class="form-select">
+                                            <option value="Pending" selected='@(item.Status == "Pending")'>Pending</option>
+                                            <option value="Processing" selected='@(item.Status == "Processing")'>Processing</option>
+                                            <option value="Shipped" selected='@(item.Status == "Shipped")'>Shipped</option>
+                                            <option value="Delivered" selected='@(item.Status == "Delivered")'>Delivered</option>
+                                            <option value="Cancelled" selected='@(item.Status == "Cancelled")'>Cancelled</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-sync-alt"></i> Update
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-info text-center">
+                <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                <h4>No orders for your products yet!</h4>
+                <p>Customers haven't ordered any of your products yet.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Setup status update handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            setupStatusUpdateHandlers();
+        });
+
+        function setupStatusUpdateHandlers() {
+            const statusForms = document.querySelectorAll('.status-update-form');
+            statusForms.forEach(form => {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await updateOrderStatus(this);
+                });
+            });
+        }
+
+        async function updateOrderStatus(form) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+
+            try {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                submitBtn.disabled = true;
+
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': getVerificationToken()
+                    }
+                });
+
+                if (response.ok) {
+                    // Reload the page to show updated status
+                    window.location.reload();
+                } else {
+                    throw new Error('Failed to update status');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                alert('Error updating order status. Please try again.');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function getVerificationToken() {
+            const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            return tokenElement ? tokenElement.value : '';
+        }
+    </script>
+}
+
+@functions {
+    public string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "pending" => "bg-warning",
+            "processing" => "bg-info",
+            "shipped" => "bg-primary",
+            "delivered" => "bg-success",
+            "cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

@@ -4,6 +4,7 @@ using FreshRoots.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FreshRoots.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250909212552_AddOrders")]
+    partial class AddOrders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -196,10 +199,6 @@ namespace FreshRoots.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("FarmerId");
@@ -229,9 +228,6 @@ namespace FreshRoots.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("FarmerId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("HarvestDate")
                         .HasColumnType("datetime2");
 
@@ -251,8 +247,6 @@ namespace FreshRoots.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("FarmerId");
 
                     b.ToTable("Products");
                 });
@@ -460,11 +454,6 @@ namespace FreshRoots.Migrations
 
             modelBuilder.Entity("FreshRoots.Models.Product", b =>
                 {
-                    b.HasOne("FreshRoots.Models.ApplicationUser", "Farmer")
-                        .WithMany()
-                        .HasForeignKey("FarmerId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.OwnsOne("FreshRoots.Models.FarmerProfile", "FarmerProfile", b1 =>
                         {
                             b1.Property<int>("ProductId")
@@ -487,8 +476,6 @@ namespace FreshRoots.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("ProductId");
                         });
-
-                    b.Navigation("Farmer");
 
                     b.Navigation("FarmerProfile")
                         .IsRequired();

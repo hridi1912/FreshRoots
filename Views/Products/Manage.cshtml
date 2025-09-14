@@ -1,59 +1,101 @@
 ﻿@model IEnumerable<FreshRoots.Models.Product>
 @{
-    ViewData["Title"] = "Manage Products";
+    Layout = null; // use main layout
+    ViewData["Title"] = "My Products";
 }
+<div class="container mt-5">
 
-<div class="container mt-4">
     @if (TempData["Msg"] is string msg)
     {
-        <div class="alert alert-success">@msg</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fa fa-check-circle me-2"></i> @msg
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     }
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>My Products</h2>
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="fa fa-plus me-1"></i> Add Product
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">My Products</h2>
+        <a asp-action="Create" class="btn btn-success shadow-sm">
+            <i class="fa fa-plus me-2"></i> Add Product
         </a>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead>
-                <tr>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th class="text-end">Price</th>
-                    <th class="text-end">Stock</th>
-                    <th>Farm</th>
-                    <th style="width:180px"></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var p in Model)
-                {
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center py-4">
+            <i class="fa fa-info-circle me-2"></i> You have not added any products yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase small">
                     <tr>
-                        <td><img src="@p.ImageUrl" alt="@p.Name" style="width:60px;height:60px;object-fit:cover" class="rounded" /></td>
-                        <td>@p.Name</td>
-                        <td>@p.Category</td>
-                        <td class="text-end">৳@p.Price.ToString("N2")</td>
-                        <td class="text-end">@p.StockQuantity</td>
-                        <td>@p.FarmerProfile?.FarmName</td>
-                        <td class="text-end">
-                            <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary me-1">
-                                <i class="fa fa-edit"></i> Edit
-                            </a>
-                            <form asp-action="Delete" method="post" class="d-inline">
-                                <input type="hidden" name="id" value="@p.Id" />
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete @p.Name?');">
-                                    <i class="fa fa-trash"></i> Delete
-                                </button>
-                            </form>
-                        </td>
+                        <th scope="col">Image</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Category</th>
+                        <th scope="col" class="text-end">Price</th>
+                        <th scope="col" class="text-end">Stock</th>
+                        <th scope="col">Farm</th>
+                        <th scope="col" class="text-end">Actions</th>
                     </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td>
+                                <img src="@p.ImageUrl" alt="@p.Name"
+                                     class="rounded" style="width:60px;height:60px;object-fit:cover" />
+                            </td>
+                            <td class="fw-semibold">@p.Name</td>
+                            <td>@p.Category</td>
+                            <td class="text-end text-success fw-bold">৳@p.Price.ToString("N2")</td>
+                            <td class="text-end">@p.StockQuantity</td>
+                            <td>@p.FarmerProfile?.FarmName</td>
+                            <td class="text-end">
+                                <a asp-action="Edit" asp-route-id="@p.Id"
+                                   class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fa fa-edit me-1"></i> Edit
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@p.Id"
+                                      method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Delete @p.Name?');">
+                                        <i class="fa fa-trash me-1"></i> Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 </div>
+
+<style>
+    /* Optional custom styling */
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .btn-outline-primary:hover {
+        color: #fff;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .btn-outline-danger:hover {
+        color: #fff;
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075) !important;
+    }
+</style>

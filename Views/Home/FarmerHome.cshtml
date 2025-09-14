@@ -1,4 +1,8 @@
-﻿@model IEnumerable<FreshRoots.Models.Product>
+﻿@{
+    Layout = "_Layout"; // Add this line to use the main layout
+}
+@model IEnumerable<FreshRoots.Models.Product>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,25 +13,29 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
-    
+
 </head>
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
-       
+
         <ul class="sidebar-menu">
-            <li><a href="#" class="active"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+            <li><a href="#" onclick="loadDashboard();return false;"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
             <li>
-                <a asp-controller="Products" asp-action="Manage">
-                    <i class="fas fa-seedling"></i> <span>Products</span>
+                <a href="#products" onclick="loadFarmerProducts(); return false;">
+                    <i class="fas fa-seedling"></i> <span>My Products</span>
                 </a>
             </li>
-            <li><a href="#"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
-            <li><a href="#profile"><i class="fas fa-user"></i> <span>Profile</span></a></li>
-            <li><a href="#"><i class="fas fa-chart-line"></i> <span>Analytics</span></a></li>
+            <li><a href="#orders" class="orders-link"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
+            <li>
+                <a href="#analytics" onclick="loadAnalytics(); return false;">
+                    <i class="fas fa-chart-line"></i> <span>Analytics</span>
+                </a>
+            </li>
+            <li><a href="#profile" onclick="loadProfile(); return false;"><i class="fas fa-user"></i> <span>Profile</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i> <span>Delivery</span></a></li>
             <li><a href="#"><i class="fas fa-users"></i> <span>Customers</span></a></li>
-            <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+            @* <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li> *@
             @* <li><a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li> *@
         </ul>
     </div>
@@ -53,40 +61,47 @@
 
         <!-- Stats Cards -->
         <div class="row">
+            <!-- New Orders -->
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="dashboard-card">
                     <div class="card-icon">
                         <i class="fas fa-shopping-cart"></i>
                     </div>
-                    <div class="stat-number">24</div>
+                    <div class="stat-number">@(ViewBag.NewOrders ?? 0)</div>
                     <div class="stat-label">New Orders</div>
                 </div>
             </div>
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="dashboard-card">
-                    <div class="card-icon">
-                        <i class="fas fa-seedling"></i>
-                    </div>
-                    <div class="stat-number">15</div>
-                    <div class="stat-label">Active Products</div>
-                </div>
-            </div>
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="dashboard-card">
-                    <div class="card-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stat-number">128</div>
-                    <div class="stat-label">Total Customers</div>
-                </div>
-            </div>
+
+            <!-- Total Revenue -->
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="dashboard-card">
                     <div class="card-icon">
                         <i class="fas fa-dollar-sign"></i>
                     </div>
-                    <div class="stat-number">$2,845</div>
+                    <div class="stat-number">$@(((decimal)(ViewBag.TotalRevenue ?? 0)).ToString("N0"))</div>
                     <div class="stat-label">Total Revenue</div>
+                </div>
+            </div>
+
+            <!-- Total Customers -->
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">@(ViewBag.TotalCustomers ?? 0)</div>
+                    <div class="stat-label">Total Customers</div>
+                </div>
+            </div>
+
+            <!-- Active Products -->
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="stat-number">@(ViewBag.ActiveProducts ?? 0)</div>
+                    <div class="stat-label">Active Products</div>
                 </div>
             </div>
         </div>
@@ -97,7 +112,7 @@
                 <!-- Products Table -->
                 <div class="products-table">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4>My Products</h4>
+                        <h4>Products in market</h4>
                         <a asp-controller="Products" asp-action="Create" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Add Product
                         </a>
@@ -110,13 +125,10 @@
                                     <th>Price</th>
                                     <th>Stock</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    
                                 </tr>
                             </thead>
                             <tbody>
-                                
-
-                                <!-- Your REAL products appended after the demo rows -->
                                 @foreach (var p in Model)
                                 {
                                     <tr>
@@ -126,7 +138,7 @@
                                                 <div>@p.Name</div>
                                             </div>
                                         </td>
-                                        <td>৳@p.Price.ToString("N2")</td>
+                                        <td>৳@p.Price</td>
                                         <td>@p.StockQuantity</td>
                                         <td>
                                             @if (p.StockQuantity > 0)
@@ -138,24 +150,10 @@
                                                 <span class="status-badge status-inactive">Out of Stock</span>
                                             }
                                         </td>
-                                        <td>
-                                            <a class="btn btn-sm btn-outline-primary me-1"
-                                               asp-controller="Products" asp-action="Edit" asp-route-id="@p.Id">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form asp-controller="Products" asp-action="Delete" method="post" class="d-inline">
-                                                <input type="hidden" name="id" value="@p.Id" />
-                                                @Html.AntiForgeryToken()
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                        onclick="return confirm('Delete @p.Name?');">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                        </td>
+                                        
                                     </tr>
                                 }
                             </tbody>
-
                         </table>
                     </div>
                 </div>
@@ -165,55 +163,370 @@
                 <!-- Recent Orders -->
                 <div class="orders-container">
                     <h4 class="mb-4">Recent Orders</h4>
-
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h5>Order #3245</h5>
-                            <div class="order-date">Today, 10:30 AM</div>
+                    <div id="farmer-orders-content">
+                        <!-- Orders will be loaded here via JavaScript -->
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-cart fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">Loading orders...</p>
                         </div>
-                        <span class="order-status status-pending">Pending</span>
-                    </div>
-
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h5>Order #3244</h5>
-                            <div class="order-date">Yesterday, 2:15 PM</div>
-                        </div>
-                        <span class="order-status status-shipped">Shipped</span>
-                    </div>
-
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h5>Order #3243</h5>
-                            <div class="order-date">Oct 12, 9:45 AM</div>
-                        </div>
-                        <span class="order-status status-delivered">Delivered</span>
-                    </div>
-
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h5>Order #3242</h5>
-                            <div class="order-date">Oct 11, 4:20 PM</div>
-                        </div>
-                        <span class="order-status status-delivered">Delivered</span>
-                    </div>
-
-                    <div class="order-item">
-                        <div class="order-info">
-                            <h5>Order #3241</h5>
-                            <div class="order-date">Oct 10, 11:30 AM</div>
-                        </div>
-                        <span class="order-status status-delivered">Delivered</span>
-                    </div>
-
-                    <div class="text-center mt-3">
-                        <a href="#" class="btn btn-outline-primary btn-sm">View All Orders</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <script>
+                // ===== FARMER ORDERS LOADING =====
+        async function loadFarmerOrders() {
+            try {
+                // Show loading state
+                const ordersContent = document.getElementById('farmer-orders-content');
+                ordersContent.innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p class="mt-2">Loading orders...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/Orders/FarmerOrderPartial');
+                if (response.ok) {
+                    const content = await response.text();
+                    ordersContent.innerHTML = content;
+
+                    // Setup status update handlers
+                    setupStatusUpdateHandlers();
+                } else {
+                    throw new Error('Failed to load orders');
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('farmer-orders-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <p>Error loading orders. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ===== STATUS UPDATE HANDLING =====
+        function setupStatusUpdateHandlers() {
+            // Handle status update form submissions
+            const statusForms = document.querySelectorAll('.status-update-form');
+            statusForms.forEach(form => {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await updateOrderStatus(this);
+                });
+            });
+        }
+
+        async function updateOrderStatus(form) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+
+            try {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                submitBtn.disabled = true;
+
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': getVerificationToken()
+                    }
+                });
+
+                if (response.ok) {
+                    // Reload orders to show updated status
+                    await loadFarmerOrders();
+                    showNotification('Order status updated successfully!', 'success');
+                } else {
+                    throw new Error('Failed to update status');
+                }
+            } catch (error) {
+                console.error('Error updating status:', error);
+                showNotification('Error updating order status. Please try again.', 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        function getVerificationToken() {
+            const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            return tokenElement ? tokenElement.value : '';
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '1000';
+            notification.style.minWidth = '300px';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+        // ===== ANALYTICS LOADING =====
+        async function loadAnalytics() {
+                    try {
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading analytics...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/Products/TopProductAnalytics');
+                if (response.ok) {
+                    const content = await response.text();
+                    mainContent.innerHTML = content;
+
+                    // Update active menu item
+                    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    document.querySelector('.sidebar-menu a[href="#analytics"]').classList.add('active');
+                } else {
+                    throw new Error('Failed to load analytics');
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                document.querySelector('.main-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Error loading analytics</h4>
+                        <p>There was a problem loading your analytics. Please try again.</p>
+                        <button onclick="loadDashboard()" class="btn btn-primary">Return to Dashboard</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ===== REFRESH ANALYTICS =====
+        async function refreshAnalytics() {
+            try {
+                const analyticsContent = document.getElementById('analytics-content');
+                if (analyticsContent && analyticsContent.innerHTML.includes('top-product-item')) {
+                    const response = await fetch('/Products/TopProductsAnalytics');
+                    if (response.ok) {
+                        const content = await response.text();
+                        analyticsContent.innerHTML = content;
+                    }
+                }
+            } catch (error) {
+                console.error('Error refreshing analytics:', error);
+            }
+        }
+
+        // ===== FULL ORDERS PAGE LOADING =====
+        async function loadOrdersPage() {
+            try {
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading your orders...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/Orders/FarmerOrders');
+                if (response.ok) {
+                    const content = await response.text();
+                    mainContent.innerHTML = content;
+
+                    // Update active menu item
+                    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    document.querySelector('.sidebar-menu a.orders-link').classList.add('active');
+
+                    // Setup status update handlers for full page
+                    setupStatusUpdateHandlers();
+                } else {
+                    throw new Error('Failed to load orders');
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.querySelector('.main-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Error loading orders</h4>
+                        <p>There was a problem loading your orders. Please try again.</p>
+                        <button onclick="loadDashboard()" class="btn btn-primary">Return to Dashboard</button>
+                    </div>
+                `;
+            }
+        }
+
+                async function loadFarmerProducts() {
+            const mainContent = document.querySelector('.main-content');
+            const response = await fetch('/Products/Manage');
+            if (response.ok) {
+                mainContent.innerHTML = await response.text();
+            } else {
+                alert('Failed to load products.');
+            }
+        }
+        // ===== FASTER FARMER STATS ANIMATION =====
+function animateFarmerValue(element, start, end, duration, isCurrency = false) {
+    const range = end - start;
+    const startTime = performance.now();
+    
+    function updateValue(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Quadratic ease-out function for smoother animation
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        
+        const currentValue = start + (range * easedProgress);
+        
+        if (isCurrency) {
+            element.textContent = '$' + Math.round(currentValue).toLocaleString();
+        } else {
+            element.textContent = Math.round(currentValue).toLocaleString();
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateValue);
+        }
+    }
+    
+    requestAnimationFrame(updateValue);
+}
+
+// Function to animate all farmer stats - FASTER VERSION
+function animateFarmerStats() {
+    const statElements = document.querySelectorAll('.stat-number');
+    
+    statElements.forEach((element, index) => {
+        const text = element.textContent;
+        let finalValue;
+        
+        if (text.includes('$')) {
+            finalValue = parseFloat(text.replace(/[^\d.]/g, ''));
+        } else {
+            finalValue = parseInt(text.replace(/\D/g, '')) || 0;
+        }
+        
+        // Skip if value is 0
+        if (finalValue === 0) return;
+        
+        // Faster animation for initial load
+        const duration = 800; // Reduced from 1500ms to 800ms
+        
+        // Set initial value to 0
+        if (index === 1) { // Total Revenue (currency)
+            element.textContent = '$0';
+            animateFarmerValue(element, 0, finalValue, duration, true);
+        } else { // Other stats (numbers)
+            element.textContent = '0';
+            animateFarmerValue(element, 0, finalValue, duration, false);
+        }
+    });
+}
+
+               // ===== REFRESH STATS =====
+        async function refreshStats() {
+            if (isUpdatingStats) return;
+            isUpdatingStats = true;
+
+            try {
+                // Add cache busting to prevent browser caching
+                const response = await fetch('/Products/GetStats?t=' + Date.now());
+                if (response.ok) {
+                    const stats = await response.json();
+
+                    // Update the stats cards
+                    const statNumbers = document.querySelectorAll('.stat-number');
+                    if (statNumbers.length >= 4) {
+                        // Store current values
+                        const currentValues = [
+                            parseInt(statNumbers[0].textContent.replace(/\D/g, '')) || 0,
+                            parseFloat(statNumbers[1].textContent.replace(/[^\d.]/g, '')) || 0,
+                            parseInt(statNumbers[2].textContent.replace(/\D/g, '')) || 0,
+                            parseInt(statNumbers[3].textContent.replace(/\D/g, '')) || 0
+                        ];
+
+                        // Animate to new values if they changed (use animateFarmerValue)
+                        if (currentValues[0] !== stats.newOrders) {
+                            animateFarmerValue(statNumbers[0], currentValues[0], stats.newOrders, 600, false);
+                        }
+
+                        if (currentValues[1] !== stats.totalRevenue) {
+                            animateFarmerValue(statNumbers[1], currentValues[1], stats.totalRevenue, 600, true);
+                        }
+
+                        if (currentValues[2] !== stats.totalCustomers) {
+                            animateFarmerValue(statNumbers[2], currentValues[2], stats.totalCustomers, 600, false);
+                        }
+
+                        if (currentValues[3] !== stats.activeProducts) {
+                            animateFarmerValue(statNumbers[3], currentValues[3], stats.activeProducts, 600, false);
+                        }
+                    }
+                    await refreshAnalytics();
+                }
+            } catch (error) {
+                console.error('Error refreshing stats:', error);
+            } finally {
+                isUpdatingStats = false;
+            }
+        }
+
+        // ===== PROFILE LOADING =====
+        async function loadProfile() {
+            try {
+                const mainContent = document.querySelector('.main-content');
+                mainContent.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading profile...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/Profile/ProfilePartial');
+                if (response.ok) {
+                    const content = await response.text();
+                    mainContent.innerHTML = content;
+
+                    // Update active menu item
+                    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+                    document.querySelector('.sidebar-menu a[href="#profile"]').classList.add('active');
+
+                    // Setup form handlers after profile loads
+                    setTimeout(setupProfileFormHandlers, 100);
+                } else {
+                    throw new Error('Failed to load profile');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                document.querySelector('.main-content').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Error loading profile</h4>
+                        <p>There was a problem loading your profile. Please try again.</p>
+                        <button onclick="loadDashboard()" class="btn btn-primary">Return to Dashboard</button>
+                    </div>
+                `;
+            }
+        }
+
         // ===== PROFILE FORM HANDLING =====
         function setupProfileFormHandlers() {
             // Handle profile form submission
@@ -250,7 +563,7 @@
                     method: 'POST',
                     body: formData,
                     headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        'RequestVerificationToken': getVerificationToken()
                     }
                 });
 
@@ -261,7 +574,9 @@
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = result;
                     const mainContent = document.querySelector('.main-content');
-                    mainContent.innerHTML = tempDiv.innerHTML;
+                    if (mainContent) {
+                        mainContent.innerHTML = tempDiv.innerHTML;
+                    }
 
                     // Re-setup event handlers for the new form
                     setupProfileFormHandlers();
@@ -294,38 +609,31 @@
                 return false;
             }
 
-
             return true;
-        }
-
-        // ===== PROFILE LOADING =====
-        async function loadProfile() {
-            try {
-                const response = await fetch('/Profile/ProfilePartial');
-                if (response.ok) {
-                    const content = await response.text();
-                    document.querySelector('.main-content').innerHTML = content;
-
-                    // Update active menu item
-                    document.querySelectorAll('.sidebar-menu a').forEach(link => {
-                        link.classList.remove('active');
-                    });
-                    document.querySelector('.sidebar-menu a[href="#profile"]').classList.add('active');
-
-                    // Setup form handlers after profile loads
-                    setTimeout(setupProfileFormHandlers, 100);
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-            }
         }
 
         function loadDashboard() {
             window.location.reload();
         }
 
-        // ===== INITIAL SETUP =====
+                // ===== INITIAL SETUP =====
         document.addEventListener('DOMContentLoaded', function() {
+            // Call the correct function for farmer stats animation
+            animateFarmerStats(); // Changed from animateStats() to animateFarmerStats()
+
+            // Load farmer orders on page load
+            loadFarmerOrders();
+
+            // Set up periodic stats refresh with cache busting
+            statsUpdateInterval = setInterval(refreshStats, 45000);
+
+            // Clean up interval when page is unloaded
+            window.addEventListener('beforeunload', function() {
+                if (statsUpdateInterval) {
+                    clearInterval(statsUpdateInterval);
+                }
+            });
+
             // Profile link
             const profileLink = document.querySelector('.sidebar-menu a[href="#profile"]');
             if (profileLink) {
@@ -335,12 +643,31 @@
                 });
             }
 
+            // Orders link
+            const ordersLink = document.querySelector('.sidebar-menu a.orders-link');
+            if (ordersLink) {
+                ordersLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loadOrdersPage();
+                });
+            }
+
+            // Analytics link
+            const analyticsLink = document.querySelector('.sidebar-menu a[href="#analytics"]');
+            if (analyticsLink) {
+                analyticsLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loadAnalytics();
+                });
+            }
+
             // Other sidebar links
-            const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"])');
+            const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"]):not(.orders-link):not([href="#products"]):not([href="#analytics"]):not([href="#"])');
             otherLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    alert('This feature would load: ' + this.querySelector('span').textContent);
+                    const span = this.querySelector('span');
+                    showNotification(`${span ? span.textContent : 'This feature'} is coming soon!`, 'info');
                 });
             });
 
