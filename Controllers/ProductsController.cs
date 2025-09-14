@@ -365,7 +365,7 @@ namespace FreshRoots.Controllers
             var products = await _db.Products
                 .Include(p => p.FarmerProfile)
                 .OrderByDescending(p => p.Id)
-                .Take(6)
+                .Take(4)
                 .ToListAsync();
 
             return View("BuyerHome", products);

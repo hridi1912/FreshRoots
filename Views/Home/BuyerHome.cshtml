@@ -566,49 +566,13 @@
         <div class="row">
             <div class="col-lg-8 mb-4">
                 <div class="orders-container">
-                    <h4 class="mb-4">Recent Orders</h4>
-
-                    <div class="order-item">
-                        <div class="order-info">
-                            <div class="order-img">
-                                <img src="https://images.unsplash.com/photo-1566385101042-1a0aa0c1268c?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Organic Tomatoes">
-                            </div>
-                            <div class="order-details">
-                                <h5>Organic Tomatoes</h5>
-                                <div class="order-date">Order #3245 • Today, 10:30 AM</div>
-                            </div>
+                    @* <h4 class="mb-4">Recent Orders</h4> *@
+                    <div id="buyer-orders-content">
+                        <!-- Orders will be loaded here via JavaScript -->
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-cart fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">Loading your orders...</p>
                         </div>
-                        <span class="order-status status-pending">Pending</span>
-                    </div>
-
-                    <div class="order-item">
-                        <div class="order-info">
-                            <div class="order-img">
-                                <img src="https://images.unsplash.com/photo-1566842600175-97dca3dfc3c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Fresh Strawberries">
-                            </div>
-                            <div class="order-details">
-                                <h5>Fresh Strawberries</h5>
-                                <div class="order-date">Order #3244 • Yesterday, 2:15 PM</div>
-                            </div>
-                        </div>
-                        <span class="order-status status-shipped">Shipped</span>
-                    </div>
-
-                    <div class="order-item">
-                        <div class="order-info">
-                            <div class="order-img">
-                                <img src="https://images.unsplash.com/photo-1573246123716-6b1782bfc499?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" alt="Organic Avocados">
-                            </div>
-                            <div class="order-details">
-                                <h5>Organic Avocados</h5>
-                                <div class="order-date">Order #3243 • Oct 12, 9:45 AM</div>
-                            </div>
-                        </div>
-                        <span class="order-status status-delivered">Delivered</span>
-                    </div>
-
-                    <div class="text-center mt-3">
-                        <a href="#" class="btn btn-outline-primary">View All Orders</a>
                     </div>
                 </div>
             </div>
@@ -786,7 +750,7 @@
                 </div>
             `;
 
-            const response = await fetch('/Orders/BuyersOrderPartial');
+                const response = await fetch('/Orders/BuyersOrderPartial?count=3');
             if (response.ok) {
                 const content = await response.text();
                 
@@ -871,9 +835,41 @@
         }
     }
 
-    function loadDashboard() {
-        window.location.reload();
-    }
+        function loadDashboard() {
+            window.location.reload();
+        }
+
+        async function loadRecentOrdersForDashboard() {
+            try {
+                const container = document.getElementById('buyer-orders-content');
+                if (!container) return;
+
+                const response = await fetch('/Orders/BuyersOrderPartial?count=2');
+                if (response.ok) {
+                    const html = await response.text();
+
+                    // Replace only the inner HTML of dashboard orders section
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-danger">
+                            Failed to load recent orders.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading recent orders for dashboard:', error);
+                const container = document.getElementById('buyer-orders-content');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-danger">
+                            Error loading recent orders.
+                        </div>
+                    `;
+                }
+            }
+        }
+
 
     // ===== PROFILE FORM HANDLING =====
     function setupProfileFormHandlers() {
@@ -1056,6 +1052,7 @@
                     loadDashboard();
                 });
             }
+                loadRecentOrdersForDashboard();
 
             // Other sidebar links
             const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"]):not(.orders-link):not([href="#"])');
@@ -1066,6 +1063,8 @@
                     showNotification(`${span ? span.textContent : 'This feature'} is coming soon!`, 'info');
                 });
             });
+            
+
 
             // Initial setup for any forms on page load
             setupProfileFormHandlers();
