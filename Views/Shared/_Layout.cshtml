@@ -65,42 +65,35 @@
                 color: var(--primary);
             }
 
-        /* Fix Join Us / Logout Buttons */
-        .navbar  {
-            font-size: 14px;
-            padding: 6px 14px;
-            border-radius: 4px;
-            font-weight: 600;
-            line-height: 1.4;
-            white-space: nowrap; /* prevent text wrapping */
-        }
-        /* Shared style for both Join Us & Logout */
+        /* Shared style for all custom buttons (Join Us, Logout, Cart) */
         .custom-btn {
-            padding: 8px 20px; /* balanced padding */
+            padding: 8px 20px;
             font-size: 15px;
             font-weight: 600;
             border-radius: 6px;
-            white-space: nowrap; /* prevents line break */
+            white-space: nowrap;
             transition: all 0.3s ease;
-            min-width: 110px; /* ensures wide enough background */
+            min-width: 110px;
             text-align: center;
             box-shadow: 0 3px 6px rgba(0,0,0,0.15);
         }
 
-        /* Join Us (Green button) */
+        /* Green buttons (Join Us, Cart) */
+        .btn-success.custom-btn,
         .btn-primary.custom-btn {
             background-color: #3a9949;
             border: none;
             color: #fff;
         }
 
+            .btn-success.custom-btn:hover,
             .btn-primary.custom-btn:hover {
                 background-color: #2a7c38;
                 transform: translateY(-2px);
                 box-shadow: 0 5px 10px rgba(0,0,0,0.2);
             }
 
-        /* Logout (Red button) */
+        /* Red button (Logout) */
         .btn-danger.custom-btn {
             background-color: #dc3545;
             border: none;
@@ -113,51 +106,17 @@
                 box-shadow: 0 5px 10px rgba(0,0,0,0.2);
             }
 
-
-        .btn-primary.custom-btn {
-            background-color: #3a9949; /* fresh green */
-            border: none;
-            padding: 8px 20px; /* balanced padding */
-            font-size: 15px;
-            font-weight: 600;
-            color: #fff;
-            border-radius: 6px;
-            white-space: nowrap; /* prevents line break */
-            transition: all 0.3s ease;
-            min-width: 110px; /* keeps button wide enough for text */
-            text-align: center;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        /* Cart badge */
+        .cart-badge {
+            position: absolute;
+            top: 6px;
+            right: 12px;
+            width: 12px;
+            height: 12px;
+            background-color: #28a745;
+            border-radius: 50%;
+            border: 2px solid #fff;
         }
-
-            .btn-primary.custom-btn:hover {
-                background-color: #2a7c38; /* darker green on hover */
-                transform: translateY(-2px);
-                box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-            }
-
-
-        /* .btn-join {
-            background-color: var(--primary);
-            border: 1px solid var(--primary);
-            color: #fff;
-        }
-
-            .btn-join:hover {
-                background-color: var(--primary-dark);
-                border-color: var(--primary-dark);
-            }
-
-        .btn-logout {
-            background-color: #dc3545;
-            border: 1px solid #dc3545;
-            color: #fff;
-        }
-
-            .btn-logout:hover {
-                background-color: #b02a37;
-                border-color: #b02a37;
-            } */
-
 
         /* Footer Styles */
         .footer {
@@ -275,11 +234,11 @@
                         }
 
                         <li class="nav-item me-2">
-                            <a class="btn btn-outline-success btn-custom" href="/Cart">
+                            <a class="btn btn-success custom-btn position-relative" href="/Cart">
                                 <i class="fas fa-shopping-cart me-1"></i> Cart
                                 @if (cartCount > 0)
                                 {
-                                    <span class="position-relative ms-1 top-0 start-100 translate-middle p-1 bg-success border border-solid rounded-circle"></span>
+                                    <span class="cart-badge"></span>
                                 }
                             </a>
                         </li>
@@ -295,7 +254,7 @@
                         }
                         else
                         {
-                            <a class="btn btn-primary me-2 custom-btn" href="/Auth/Login">Join Us</a>
+                            <a class="btn btn-success me-2 custom-btn" href="/Auth/Login">Join Us</a>
                         }
                     </li>
                 </ul>
@@ -343,9 +302,9 @@
                 <div class="col-md-4 mb-4" id="contact-section">
                     <h3 class="footer-title">Contact Us</h3>
                     <ul class="footer-links">
-                        <li><i class="fas fa-map-marker-alt me-2"></i> 123 Farm Road, Countryside</li>
-                        <li><i class="fas fa-phone me-2"></i> (555) 123-4567</li>
-                        <li><i class="fas fa-envelope me-2"></i> info@freshroots.com</li>
+                        <li><i class="fas fa-map-marker-alt me-2"></i> House #12, Road #5, Dhanmondi, Dhaka 1209, Bangladesh</li>
+                        <li><i class="fas fa-phone me-2"></i> +880 1711-223344</li>
+                        <li><i class="fas fa-envelope me-2"></i> info@freshrootsbd.com</li>
                     </ul>
                 </div>
             </div>

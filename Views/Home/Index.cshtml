@@ -203,33 +203,64 @@
                 font-family: Arial, sans-serif;
                 opacity: 0.5;
             }
-
-        /* Newsletter */
+        /* Newsletter Section */
         .newsletter {
+            background: linear-gradient(135deg, #e6f7e6, #f9f9f9);
             padding: 60px 0;
-            background-color: var(--primary);
-            color: #fff;
+            border-top: 2px solid #3a9949;
+            border-bottom: 2px solid #3a9949;
         }
 
-        .newsletter-form {
-            max-width: 500px;
-            margin: 0 auto;
+            .newsletter h2 {
+                font-family: 'Playfair Display', serif;
+                font-weight: 700;
+                color: #2a7c38;
+                font-size: 2.5rem;
+            }
+
+            .newsletter p {
+                font-size: 1.1rem;
+                color: #555;
+            }
+
+        .newsletter-form .input-group {
+            border-radius: 50px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        
-        {
-            font-size: 2.5rem;
-        }
-
-        .hero-subtitle {
+        .newsletter-form .form-control {
+            border: none;
+            padding: 15px 20px;
             font-size: 1rem;
+            border-radius: 50px 0 0 50px;
+            box-shadow: none;
         }
 
-        .btn {
-            display: block;
-            margin: 10px auto;
-            width: 80%;
+            .newsletter-form .form-control:focus {
+                outline: none;
+                box-shadow: inset 0 0 5px rgba(58, 153, 73, 0.5);
+            }
+
+        .newsletter-form .btn-success {
+            border-radius: 0 50px 50px 0;
+            background-color: #3a9949;
+            border: none;
+            transition: all 0.3s ease;
         }
+
+            .newsletter-form .btn-success:hover {
+                background-color: #2a7c38;
+                transform: translateY(-2px);
+                box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            }
+
+        .newsletter small {
+            display: block;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
 
         }
     </style>
@@ -361,20 +392,37 @@
             </div>
         </div>
     </section>
-
     <!-- Newsletter Section -->
-    <section class="newsletter">
+    <section class="newsletter py-5 bg-light">
         <div class="container text-center">
-            <h2>Subscribe to Our Newsletter</h2>
-            <p class="mb-4">Get updates on new products, seasonal offers, and farming news</p>
-            <form class="newsletter-form">
-                <div class="input-group">
-                    <input type="email" class="form-control form-control-lg" placeholder="Your email address">
-                    <button class="btn btn-dark btn-lg" type="submit">Subscribe</button>
+            <h2 class="fw-bold mb-3">🌱 Join the FreshRoots Community</h2>
+            <p class="text-muted mb-4">
+                Subscribe to get updates on fresh harvests, seasonal offers, and sustainable farming tips.
+            </p>
+            <form class="newsletter-form d-flex justify-content-center" id="newsletterForm">
+                <div class="input-group" style="max-width: 500px;">
+                    <input type="email" class="form-control form-control-lg" placeholder="Enter your email address" required>
+                    <button class="btn btn-success btn-lg" type="submit">
+                        <i class="fas fa-envelope me-2"></i> Subscribe
+                    </button>
                 </div>
             </form>
+            <small class="d-block mt-3 text-muted">
+                We respect your privacy. Unsubscribe anytime.
+            </small>
         </div>
     </section>
+
+    <script>
+        // Show alert on subscribe
+        document.getElementById("newsletterForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent actual form submission
+            alert("Thank you! You have subscribed to FreshRoots Newsletter.");
+            this.reset(); // Clear the input field
+        });
+    </script>
+    
+
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
