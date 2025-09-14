@@ -15,5 +15,8 @@ namespace FreshRoots.ViewModels
 
         [Display(Name = "Remember Me")]
         public bool RememberMe { get; set; }
+
+        [Required(ErrorMessage = "Please select a role.")]
+        public string Role { get; set; }
     }
 }

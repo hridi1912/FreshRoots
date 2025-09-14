@@ -1,0 +1,49 @@
+﻿@model FreshRoots.Models.Farmer
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Edit Farmer";
+}
+<h2>Edit Farmer</h2>
+
+<form asp-action="EditFarmer" method="post" novalidate>
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="FarmerId" />
+    <div class="text-danger mb-3" asp-validation-summary="All"></div>
+
+    <div class="mb-3">
+        <label asp-for="UserId" class="form-label"></label>
+        <input asp-for="UserId" class="form-control" readonly />
+        <span class="text-danger" asp-validation-for="UserId"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FullName" class="form-label"></label>
+        <input asp-for="FullName" class="form-control" />
+        <span class="text-danger" asp-validation-for="FullName"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PhoneNumber" class="form-label"></label>
+        <input asp-for="PhoneNumber" class="form-control" />
+        <span class="text-danger" asp-validation-for="PhoneNumber"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Address" class="form-label"></label>
+        <input asp-for="Address" class="form-control" />
+        <span class="text-danger" asp-validation-for="Address"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PickupLocation" class="form-label"></label>
+        <input asp-for="PickupLocation" class="form-control" />
+        <span class="text-danger" asp-validation-for="PickupLocation"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="/Admin/Farmers" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

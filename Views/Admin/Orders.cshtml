@@ -1,0 +1,41 @@
+﻿@model IEnumerable<FreshRoots.Models.OrderItem>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Orders";
+}
+
+<h2>Orders (OrderItems)</h2>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>OrderId</th>
+            <th>ProductId</th>
+            <th>FarmerId</th>
+            <th>BuyerId</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.OrderId</td>
+                <td>@item.ProductId</td>
+                <td>@item.FarmerId</td>
+                <td>@item.Order?.BuyerId</td>
+                <td>@item.Price</td>
+                <td>@item.Quantity</td>
+                <td>@item.Status</td>
+                <td>
+                    <a href="/Admin/EditOrderItem/@item.Id" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="/Admin/DeleteOrderItem/@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
