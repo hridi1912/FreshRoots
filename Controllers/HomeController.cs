@@ -69,6 +69,7 @@ namespace FreshRoots.Controllers
 
             // ====== CALCULATIONS ======
             int newOrders = orderItems
+                .Where(oi => oi.Status == "Pending")
                 .Select(oi => oi.OrderId)
                 .Distinct()
                 .Count();
