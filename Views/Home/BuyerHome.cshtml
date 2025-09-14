@@ -1,4 +1,4 @@
-﻿using FreshRoots.Data;
+using FreshRoots.Data;
 using FreshRoots.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -39,6 +39,7 @@ namespace FreshRoots.Controllers
 
             var orderPreview = new Order
             {
+
             BuyerId = user.Id,
             OrderDate = DateTime.Now,
             Status = "Pending",
@@ -52,6 +53,105 @@ namespace FreshRoots.Controllers
             Product = c.Product
             }).ToList()
             };
+
+                <div class="alert alert-info text-center">
+                    <h4>No products found!</h4>
+                    <p>Try adjusting your search or filter criteria.</p>
+                    <a class="btn btn-outline-primary" href="/Products">View All Products</a>
+                </div>
+            }
+                
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="orders-container">
+                    @* <h4 class="mb-4">Recent Orders</h4> *@
+                    <div id="buyer-orders-content">
+                        <!-- Orders will be loaded here via JavaScript -->
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-cart fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">Loading your orders...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                
+
+                <!-- Seasonal Offers -->
+                <div class="dashboard-card mt-4">
+                    <h4 class="mb-4">Seasonal Offers</h4>
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-tag me-2"></i>Autumn Harvest Sale</h6>
+                        <p class="mb-0">Get 15% off on all seasonal produce. Use code: HARVEST15</p>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-shipping-fast me-2"></i>Free Delivery</h6>
+                        <p class="mb-0">Free delivery on orders over $50 this week!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+            // ===== DASHBOARD STATS =====
+        let statsUpdateInterval;
+        let isUpdatingStats = false;
+
+        async function loadDashboardStats() {
+            if (isUpdatingStats) return; // Prevent multiple simultaneous updates
+            isUpdatingStats = true;
+
+            try {
+                console.log('Loading dashboard stats...');
+
+                const response = await fetch('/Products/GetBuyerDashboardStats');
+                console.log('Response status:', response.status);
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    console.log('Stats received:', stats);
+
+                    // Update stats on the page WITHOUT animation
+                    updateDashboardStats(stats, false);
+                } else {
+                    console.error('Failed to load statistics, status:', response.status);
+                }
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                showNotification('Error loading statistics. Please refresh the page.', 'error');
+            } finally {
+                isUpdatingStats = false;
+            }
+        }
+
+        function updateDashboardStats(stats, animate = true) {
+            console.log('Updating dashboard stats with:', stats);
+
+            // Update the DOM elements directly
+            const activeOrdersEl = document.querySelector('[data-stat="active-orders"]');
+            const totalSpentEl = document.querySelector('[data-stat="total-spent"]');
+            const carbonSavedEl = document.querySelector('[data-stat="carbon-saved"]');
+            const totalDeliveriesEl = document.querySelector('[data-stat="total-deliveries"]');
+
+            if (activeOrdersEl) {
+                const currentValue = parseInt(activeOrdersEl.textContent) || 0;
+                const newValue = stats.activeOrders || 0;
+
+                if (animate && newValue !== currentValue) {
+                    animateValue(activeOrdersEl, currentValue, newValue, '');
+                } else {
+                    activeOrdersEl.textContent = newValue;
+                }
+            }
+
+            if (totalSpentEl) {
+                const currentValue = parseFloat(totalSpentEl.textContent.replace(/[^\d.]/g, '')) || 0;
+                const newValue = stats.totalSpent || 0;
+
 
             return View(orderPreview);
             }
@@ -115,6 +215,202 @@ namespace FreshRoots.Controllers
 
                     return View(order);
                     }
+
+                } catch (error) {
+                    console.error('Error fetching updated stats:', error);
+                }
+            }, 30000);
+        }
+
+
+    // ===== ORDERS LOADING =====
+    async function loadOrders() {
+        try {
+            // Show loading state
+            const mainContent = document.querySelector('.main-content');
+            const originalContent = mainContent.innerHTML;
+            
+            mainContent.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Loading your orders...</p>
+                </div>
+            `;
+
+                const response = await fetch('/Orders/BuyersOrderPartial?count=3');
+            if (response.ok) {
+                const content = await response.text();
+                
+                // Replace the main content with orders
+                mainContent.innerHTML = content;
+                
+                // Update active menu item
+                document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                const ordersLink = document.querySelector('.sidebar-menu a.orders-link');
+                if (ordersLink) {
+                    ordersLink.classList.add('active');
+                }
+                
+                // Initialize any order-specific JavaScript
+                initOrderPage();
+            } else {
+                throw new Error('Failed to load orders');
+            }
+        } catch (error) {
+            console.error('Error loading orders:', error);
+            showNotification('Error loading orders. Please try again.', 'error');
+            
+            // Restore original content on error
+            if (originalContent) {
+                mainContent.innerHTML = originalContent;
+            }
+        }
+    }
+
+    function initOrderPage() {
+        // Add any order page specific initialization here
+        console.log('Order page initialized');
+    }
+
+    // ===== PROFILE LOADING =====
+    async function loadProfile() {
+        try {
+            // Show loading state
+            const mainContent = document.querySelector('.main-content');
+            const originalContent = mainContent.innerHTML;
+            
+            mainContent.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Loading profile...</p>
+                </div>
+            `;
+
+            const response = await fetch('/Profile/ProfilePartial');
+            if (response.ok) {
+                const content = await response.text();
+                
+                // Replace the main content with profile
+                mainContent.innerHTML = content;
+                
+                // Update active menu item
+                document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                
+                const profileLink = document.querySelector('.sidebar-menu a[href="#profile"]');
+                if (profileLink) {
+                    profileLink.classList.add('active');
+                }
+                
+                // Setup form handlers after profile loads
+                setTimeout(setupProfileFormHandlers, 100);
+            } else {
+                throw new Error('Failed to load profile');
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            showNotification('Error loading profile. Please try again.', 'error');
+            
+            // Restore original content on error
+            if (originalContent) {
+                mainContent.innerHTML = originalContent;
+            }
+        }
+    }
+
+        function loadDashboard() {
+            window.location.reload();
+        }
+
+        async function loadRecentOrdersForDashboard() {
+            try {
+                const container = document.getElementById('buyer-orders-content');
+                if (!container) return;
+
+                const response = await fetch('/Orders/BuyersOrderPartial?count=2');
+                if (response.ok) {
+                    const html = await response.text();
+
+                    // Replace only the inner HTML of dashboard orders section
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-danger">
+                            Failed to load recent orders.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading recent orders for dashboard:', error);
+                const container = document.getElementById('buyer-orders-content');
+                if (container) {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-danger">
+                            Error loading recent orders.
+                        </div>
+                    `;
+                }
+            }
+        }
+
+
+    // ===== PROFILE FORM HANDLING =====
+    function setupProfileFormHandlers() {
+        // Handle profile form submission
+        const profileForm = document.getElementById('profileForm');
+        if (profileForm) {
+            profileForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await submitProfileForm(this);
+            });
+        }
+
+        // Handle change password button
+        const changePasswordBtn = document.querySelector('.change-password-btn');
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', function() {
+                // Implement change password functionality
+                const changePasswordForm = document.getElementById('changePasswordForm');
+                if (changePasswordForm) {
+                    changePasswordForm.style.display = changePasswordForm.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        }
+    }
+
+    // AJAX form submission
+    async function submitProfileForm(form) {
+        if (!validateProfileForm(form)) return;
+
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+        submitBtn.disabled = true;
+
+        try {
+            const formData = new FormData(form);
+
+            // Add verification token
+            const verificationToken = document.querySelector('input[name="__RequestVerificationToken"]');
+            const headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            };
+
+            if (verificationToken) {
+                headers['RequestVerificationToken'] = verificationToken.value;
+            }
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new URLSearchParams(formData),
+                headers: headers
+            });
+
 
                     // ✅ Buyer’s Orders
                     public async Task<IActionResult>
@@ -207,11 +503,37 @@ namespace FreshRoots.Controllers
                                         _db.Orders.Update(orderItem.Order);
                                         await _db.SaveChangesAsync();
 
+
                                         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
                                         return Ok();
 
                                         return RedirectToAction(nameof(FarmerOrders));
                                         }
+
+            const dashboardLink = document.querySelector('.sidebar-menu a[href="#"]');
+            if (dashboardLink) {
+                dashboardLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    loadDashboard();
+                });
+            }
+                loadRecentOrdersForDashboard();
+
+            // Other sidebar links
+            const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"]):not(.orders-link):not([href="#"])');
+            otherLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const span = this.querySelector('span');
+                    showNotification(`${span ? span.textContent : 'This feature'} is coming soon!`, 'info');
+                });
+            });
+            
+
+
+            // Initial setup for any forms on page load
+            setupProfileFormHandlers();
+
 
                                         // ✅ Farmer’s Orders Partial
                                         [Authorize(Roles = "Farmer")]

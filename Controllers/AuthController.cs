@@ -3,6 +3,7 @@ using FreshRoots.Models;
 using FreshRoots.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
 
 namespace FreshRoots.Controllers
 {
@@ -154,14 +155,26 @@ namespace FreshRoots.Controllers
                 return View(model);
             }
 
-            // 🔹 Check if chosen role matches stored role
-            if (!string.Equals(user.UserType, model.Role, StringComparison.OrdinalIgnoreCase))
+
+            // Get the role from the form
+            var roleFromForm = Request.Form["role"].ToString();
+
+            // Verify the user has the selected role
+            if (string.IsNullOrEmpty(roleFromForm))
             {
-                ModelState.AddModelError("", $"You have registered as {user.UserType}. Please select {user.UserType}.");
+                ViewBag.RoleError = "Please select your role";
                 return View(model);
             }
 
-            var loginResult = await _signInManager.PasswordSignInAsync(
+            if (!await _userManager.IsInRoleAsync(user, roleFromForm))
+            {
+                ViewBag.RoleError = $"This account is not registered as a {roleFromForm}";
+                return View(model);
+            }
+
+            // Sign in
+            var result = await _signInManager.PasswordSignInAsync(
+
                 user.UserName,
                 model.Password,
                 model.RememberMe,
