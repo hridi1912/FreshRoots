@@ -1,0 +1,35 @@
+﻿@model IEnumerable<FreshRoots.Models.Buyer>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Buyers";
+}
+
+<h2>Buyers</h2>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>BuyerId</th>
+            <th>UserId</th>
+            <th>Full Name</th>
+            <th>Phone Number</th>
+            <th>Address</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var buyer in Model)
+        {
+            <tr>
+                <td>@buyer.BuyerId</td>
+                <td>@buyer.UserId</td>
+                <td>@buyer.FullName</td>
+                <td>@buyer.PhoneNumber</td>
+                <td>@buyer.Address</td>
+                <td>
+                    <a href="/Admin/EditBuyer/@buyer.BuyerId" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="/Admin/DeleteBuyer/@buyer.BuyerId" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
