@@ -1,0 +1,28 @@
+﻿@model FreshRoots.Models.Farmer
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Delete Farmer";
+}
+
+<h2>Delete Farmer</h2>
+<p class="text-danger fw-bold">
+    ⚠️ Warning: Deleting this farmer will also delete:
+    <ul>
+        <li>All products uploaded by this farmer</li>
+        <li>All order items linked to those products</li>
+    </ul>
+    This action cannot be undone. Are you sure you want to continue?
+</p>
+
+<ul>
+    <li><strong>Full Name:</strong> @Model.FullName</li>
+    <li><strong>Phone:</strong> @Model.PhoneNumber</li>
+    <li><strong>Address:</strong> @Model.Address</li>
+    <li><strong>Pickup Location:</strong> @Model.PickupLocation</li>
+</ul>
+
+<form asp-action="DeleteFarmer" method="post">
+    <input type="hidden" asp-for="FarmerId" />
+    <button type="submit" class="btn btn-danger">Confirm Delete</button>
+    <a href="/Admin/Farmers" class="btn btn-secondary">Cancel</a>
+</form>

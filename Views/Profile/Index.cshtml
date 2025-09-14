@@ -1,4 +1,8 @@
-﻿@model FreshRoots.Models.ApplicationUser
+﻿@model dynamic
+@{
+    var profileType = ViewBag.ProfileType as string;
+    string cacheBuster = DateTime.Now.Ticks.ToString(); // prevents stale image
+}
 
 <div class="container mt-4">
     <h2><i class="fas fa-user-circle"></i> My Profile</h2>
@@ -9,20 +13,61 @@
         <div class="alert alert-success">@ViewBag.Message</div>
     }
 
-    <form asp-action="Index" method="post">
-        <div class="mb-3">
-            <label class="form-label">Full Name</label>
-            <input asp-for="FullName" class="form-control" />
+    <!-- Profile header: picture + name + role -->
+    <div class="d-flex align-items-center mb-4">
+        @if (!string.IsNullOrWhiteSpace(Model?.ProfilePicture))
+        {
+            <img src="@($"{Model.ProfilePicture}?t={cacheBuster}")" alt="Profile picture"
+                 style="width:70px;height:70px;object-fit:cover" class="rounded-circle me-3 border" />
+        }
+        else if (!string.IsNullOrEmpty(Model?.FullName))
+        {
+            <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center me-3"
+                 style="width:70px;height:70px;font-size:28px;font-weight:bold;">
+                @Model.FullName[0]
+            </div>
+        }
+
+        <div>
+            <h4 class="mb-0">@Model?.FullName</h4>
+            <p class="text-muted mb-0">@profileType</p>
         </div>
+    </div>
+
+    <form asp-action="ProfilePartial" asp-controller="Profile" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
 
         <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input asp-for="Email" class="form-control" />
+            <label class="form-label">Full Name</label>
+            <input name="FullName" value="@Model?.FullName" class="form-control" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Phone Number</label>
-            <input asp-for="PhoneNumber" class="form-control" />
+            <input name="PhoneNumber" value="@Model?.PhoneNumber" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Address</label>
+            <input name="Address" value="@Model?.Address" class="form-control" />
+        </div>
+
+        @if (profileType == "Farmer")
+        {
+            <div class="mb-3">
+                <label class="form-label">Pickup Location</label>
+                <input name="PickupLocation" value="@Model?.PickupLocation" class="form-control" />
+            </div>
+        }
+
+        <div class="mb-3">
+            <label class="form-label">Profile Picture</label>
+            <input type="file" name="profileImageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">User Type</label>
+            <input type="text" class="form-control" value="@profileType" readonly />
         </div>
 
         <button type="submit" class="btn btn-primary">Update Profile</button>

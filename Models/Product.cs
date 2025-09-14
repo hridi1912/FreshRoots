@@ -20,7 +20,6 @@ namespace FreshRoots.Models
         [Range(0, 100000)]
         public int StockQuantity { get; set; }
 
-        // Stores relative web path like /images/products/abcd.png
         public string? ImageUrl { get; set; }
 
         [Required, StringLength(64)]
@@ -31,9 +30,11 @@ namespace FreshRoots.Models
         public DateTime HarvestDate { get; set; } = DateTime.Today;
 
         
-        public string? FarmerId { get; set; }        // FK to AspNetUsers
-        [ForeignKey("FarmerId")]
-        public ApplicationUser? Farmer { get; set; }
+        [Required]
+        [ForeignKey("Farmer")]
+        public int FarmerId { get; set; }
+        public Farmer? Farmer { get; set; }
+        
 
         public FarmerProfile FarmerProfile { get; set; } = new FarmerProfile();
     }

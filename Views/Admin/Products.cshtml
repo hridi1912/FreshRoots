@@ -1,0 +1,41 @@
+﻿@model IEnumerable<FreshRoots.Models.Product>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Products";
+}
+
+<h2>Products</h2>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>FarmerId</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Stock Quantity</th>
+            <th>Category</th>
+            <th>Harvest Date</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Id</td>
+                <td>@product.FarmerId</td>
+                <td>@product.Name</td>
+                <td>@product.Description</td>
+                <td>@product.Price</td>
+                <td>@product.StockQuantity</td>
+                <td>@product.Category</td>
+                <td>@product.HarvestDate.ToShortDateString()</td>
+                <td>
+                    <a href="/Admin/EditProduct/@product.Id" class="btn btn-sm btn-primary">Edit</a>
+                    <a href="/Admin/DeleteProduct/@product.Id" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

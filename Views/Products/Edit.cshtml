@@ -5,6 +5,11 @@
 
 <div class="container mt-4">
     <h2>Edit Product</h2>
+    @if (ViewBag.Msg != null)
+    {
+        <div class="alert alert-success">@ViewBag.Msg</div>
+    }
+
     <hr />
     <form asp-action="Edit" method="post" enctype="multipart/form-data">
         @Html.AntiForgeryToken()
