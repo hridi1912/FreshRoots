@@ -21,17 +21,9 @@
 
         <ul class="sidebar-menu">
             <li><a href="#" onclick="loadDashboard();return false;"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
-            <li>
-                <a href="#products" onclick="loadFarmerProducts(); return false;">
-                    <i class="fas fa-seedling"></i> <span>My Products</span>
-                </a>
-            </li>
+            <li><a href="#products" onclick="loadFarmerProducts(); return false;"><i class="fas fa-seedling"></i> <span>My Products</span></a></li>
             <li><a href="#orders" class="orders-link"><i class="fas fa-shopping-cart"></i> <span>Orders</span></a></li>
-            <li>
-                <a href="#analytics" onclick="loadAnalytics(); return false;">
-                    <i class="fas fa-chart-line"></i> <span>Analytics</span>
-                </a>
-            </li>
+            <li><a href="#analytics" onclick="loadAnalytics(); return false;"><i class="fas fa-chart-line"></i> <span>Analytics</span></a></li>
             <li><a href="#profile" onclick="loadProfile(); return false;"><i class="fas fa-user"></i> <span>Profile</span></a></li>
             <li><a href="#"><i class="fas fa-truck"></i> <span>Delivery</span></a></li>
             <li><a href="#"><i class="fas fa-users"></i> <span>Customers</span></a></li>
@@ -47,11 +39,21 @@
             <h3>Farmer Dashboard</h3>
             <div class="user-info">
                 <div class="user-avatar mb-3">
-                    @if (!string.IsNullOrEmpty(User.Identity.Name))
+                    @if (ViewBag.ProfilePicturePath != null)
                     {
-                        @User.Identity.Name[0]
+                        <img src="@ViewBag.ProfilePicturePath"
+                             alt="Profile Picture"
+                             class="profile-avatar" />
+                    }
+                    else if (!string.IsNullOrEmpty(User.Identity.Name))
+                    {
+                        <span class="default-avatar">
+                            @User.Identity.Name[0]
+                        </span>
                     }
                 </div>
+
+
                 <div>
                     <div>@User.Identity.Name</div>
                     <small class="text-muted">Farmer Account</small>

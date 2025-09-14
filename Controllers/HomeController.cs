@@ -23,7 +23,6 @@ namespace FreshRoots.Controllers
             _signInManager = signInManager;
         }
 
-        
         public async Task<IActionResult> Index()
         {
             if (_signInManager.IsSignedIn(User))
@@ -40,11 +39,7 @@ namespace FreshRoots.Controllers
             return View();
         }
 
-
-
-
-
-        // Farmer dashboard homepage (load from DB now)
+        // ================= FARMER DASHBOARD =================
         [Authorize(Roles = "Farmer")]
         public async Task<IActionResult> FarmerHome()
         {
@@ -54,6 +49,11 @@ namespace FreshRoots.Controllers
             // Find this farmer
             var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == user.Id);
             if (farmer == null) return Unauthorized();
+
+            // Set profile picture (for header UI)
+            ViewBag.ProfilePicturePath = !string.IsNullOrEmpty(farmer.ProfilePicture)
+                ? farmer.ProfilePicture
+                : null;
 
             // Products owned by this farmer
             var farmerProducts = await _db.Products
@@ -68,24 +68,20 @@ namespace FreshRoots.Controllers
                 .ToListAsync();
 
             // ====== CALCULATIONS ======
-            // Number of unique orders involving this farmer
             int newOrders = orderItems
                 .Select(oi => oi.OrderId)
                 .Distinct()
                 .Count();
 
-            // Total revenue from delivered items only
             decimal totalRevenue = orderItems
                 .Where(oi => oi.Status == "Delivered")   
                 .Sum(oi => oi.Quantity * oi.Price);
 
-            // Unique customers who ordered from this farmer
             int totalCustomers = orderItems
                 .Select(oi => oi.Order.BuyerId)
                 .Distinct()
                 .Count();
 
-            // Active products (stock > 0)
             int activeProducts = farmerProducts.Count(p => p.StockQuantity > 0);
 
             // Pass to View
@@ -97,21 +93,28 @@ namespace FreshRoots.Controllers
             return View(farmerProducts);
         }
 
-
-
-
-
-
-
+        // ================= BUYER DASHBOARD =================
         [Authorize(Roles = "Buyer")]
         public async Task<IActionResult> BuyerHome()
         {
-            // Get featured products (you can customize this query)
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return Unauthorized();
+
+            // Find this buyer
+            var buyer = await _db.Buyers.FirstOrDefaultAsync(b => b.UserId == user.Id);
+            if (buyer == null) return Unauthorized();
+
+            // Set profile picture (for header UI)
+            ViewBag.ProfilePicturePath = !string.IsNullOrEmpty(buyer.ProfilePicture)
+                ? buyer.ProfilePicture
+                : null;
+
+            // Get featured products (customize as needed)
             var products = await _db.Products
-                .Include(p => p.FarmerProfile) // Include farmer profile if needed
-                .Where(p => p.StockQuantity > 0) // Only show products in stock
-                .OrderByDescending(p => p.HarvestDate) // Show newest first
-                .Take(3) // Limit to 6 featured products
+                .Include(p => p.FarmerProfile)
+                .Where(p => p.StockQuantity > 0)
+                .OrderByDescending(p => p.HarvestDate)
+                .Take(3)
                 .ToListAsync();
 
             return View(products);
