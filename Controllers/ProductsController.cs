@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace FreshRoots.Controllers
@@ -416,6 +417,30 @@ namespace FreshRoots.Controllers
                 totalDeliveries,
                 carbonSaved = totalCarbonSaved
             });
+        }
+
+        [Authorize(Roles = "Buyer")]
+        [HttpGet]
+        public async Task<IActionResult> CarbonFootprint()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var orders = await _db.Orders
+                .Where(o => o.BuyerId == userId && o.Status == "Delivered")
+                .Include(o => o.OrderItems)
+                .ToListAsync();
+
+            var totalItems = orders.Sum(o => o.OrderItems.Sum(i => i.Quantity));
+            var totalCarbonSaved = totalItems * 2; // Example
+
+            var vm = new CarbonfootprintViewModel
+            {
+                TotalCarbonSaved = totalCarbonSaved,
+                DeliveredOrdersCount = orders.Count,
+                TotalItems = totalItems
+            };
+
+            return PartialView("_CarbonFootprint", vm);
         }
     }
 }

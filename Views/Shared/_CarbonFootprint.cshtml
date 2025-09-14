@@ -1,0 +1,24 @@
+﻿@model FreshRoots.ViewModels.CarbonfootprintViewModel
+
+<div class="card p-4 shadow-sm">
+    <h4 class="mb-3">🌱 Your Carbon Footprint Saved</h4>
+    <p><strong>Total Carbon Saved:</strong> @Model.TotalCarbonSaved kg CO2</p>
+    <p><strong>Delivered Orders:</strong> @Model.DeliveredOrdersCount</p>
+    <p><strong>Total Items Purchased:</strong> @Model.TotalItems</p>
+
+    <div class="progress mt-3" style="height: 20px;">
+        <div class="progress-bar bg-success" role="progressbar"
+             style="width:@Math.Min((double)Model.TotalCarbonSaved, 100)%">
+            @Model.TotalCarbonSaved kg
+        </div>
+    </div>
+</div>
+<style>
+    .card {
+        background-color: #f9f9f9;
+        border-radius: 10px;
+    }
+    .progress-bar {
+        font-weight: bold;
+    }
+</style>
