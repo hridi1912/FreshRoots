@@ -548,10 +548,9 @@ function animateFarmerStats() {
         }
 
         // AJAX form submission
-        async function submitProfileForm(form) {
+                        async function submitProfileForm(form) {
             if (!validateProfileForm(form)) return;
 
-            // Show loading state
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
@@ -567,31 +566,38 @@ function animateFarmerStats() {
                     }
                 });
 
-                if (response.ok) {
-                    const result = await response.text();
+                if (!response.ok) {
+                    throw new Error("Server error: " + response.status);
+                }
 
-                    // Replace the form with the updated content
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = result;
-                    const mainContent = document.querySelector('.main-content');
-                    if (mainContent) {
-                        mainContent.innerHTML = tempDiv.innerHTML;
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification(result.message, 'success');
+
+                    // ✅ Reload updated profile partial
+                    const res = await fetch('/Profile/ProfilePartial');
+                    if (res.ok) {
+                        const html = await res.text();
+                        const mainContent = document.querySelector('.main-content');
+                        if (mainContent) {
+                            mainContent.innerHTML = html;
+                            setupProfileFormHandlers(); // re-attach handlers
+                        }
                     }
-
-                    // Re-setup event handlers for the new form
-                    setupProfileFormHandlers();
                 } else {
-                    alert('Error updating profile. Please try again.');
+                    showNotification(result.message || 'Profile update failed.', 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error updating profile. Please try again.');
+                console.error('Error updating profile:', error);
+                showNotification('Error updating profile. Please try again.', 'error');
             } finally {
-                // Restore button state
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         }
+
+
 
         // Form validation
         function validateProfileForm(form) {

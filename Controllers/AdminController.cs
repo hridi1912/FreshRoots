@@ -17,10 +17,7 @@ namespace FreshRoots.Controllers
         }
 
         // ================= DASHBOARD =================
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public IActionResult Index() => View();
 
         // ================= USERS =================
         public async Task<IActionResult> Users()
@@ -37,11 +34,19 @@ namespace FreshRoots.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditUser(ApplicationUser model)
         {
             if (ModelState.IsValid)
             {
-                _db.Users.Update(model);
+                var user = await _db.Users.FindAsync(model.Id);
+                if (user == null) return NotFound();
+
+                user.FullName = model.FullName;
+                user.UserType = model.UserType;
+                user.Email = model.Email;
+                user.PhoneNumber = model.PhoneNumber;
+
                 await _db.SaveChangesAsync();
                 return RedirectToAction("Users");
             }
@@ -56,6 +61,7 @@ namespace FreshRoots.Controllers
         }
 
         [HttpPost, ActionName("DeleteUser")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUserConfirmed(string id)
         {
             var user = await _db.Users.FindAsync(id);
@@ -66,7 +72,6 @@ namespace FreshRoots.Controllers
                 var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == id);
                 if (farmer != null)
                 {
-                    // Delete farmer’s order items first
                     var farmerProductIds = await _db.Products
                         .Where(p => p.FarmerId == farmer.FarmerId)
                         .Select(p => p.Id)
@@ -75,11 +80,9 @@ namespace FreshRoots.Controllers
                     var orderItems = _db.OrderItems.Where(oi => farmerProductIds.Contains(oi.ProductId));
                     _db.OrderItems.RemoveRange(orderItems);
 
-                    // Delete farmer’s products
                     var products = _db.Products.Where(p => p.FarmerId == farmer.FarmerId);
                     _db.Products.RemoveRange(products);
 
-                    // Delete farmer row
                     _db.Farmers.Remove(farmer);
                 }
             }
@@ -92,9 +95,7 @@ namespace FreshRoots.Controllers
                 }
             }
 
-            // Delete the user itself
             _db.Users.Remove(user);
-
             await _db.SaveChangesAsync();
             return RedirectToAction("Users");
         }
@@ -114,11 +115,19 @@ namespace FreshRoots.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditFarmer(Farmer model)
         {
             if (ModelState.IsValid)
             {
-                _db.Farmers.Update(model);
+                var farmer = await _db.Farmers.FindAsync(model.FarmerId);
+                if (farmer == null) return NotFound();
+
+                farmer.FullName = model.FullName;
+                farmer.PhoneNumber = model.PhoneNumber;
+                farmer.Address = model.Address;
+                farmer.PickupLocation = model.PickupLocation;
+
                 await _db.SaveChangesAsync();
                 return RedirectToAction("Farmers");
             }
@@ -129,17 +138,16 @@ namespace FreshRoots.Controllers
         {
             var farmer = await _db.Farmers.FindAsync(id);
             if (farmer == null) return NotFound();
-
             return View(farmer);
         }
 
         [HttpPost, ActionName("DeleteFarmer")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFarmerConfirmed(int id)
         {
             var farmer = await _db.Farmers.FindAsync(id);
             if (farmer == null) return NotFound();
 
-            // Delete order items linked to farmer’s products
             var farmerProductIds = await _db.Products
                 .Where(p => p.FarmerId == id)
                 .Select(p => p.Id)
@@ -148,14 +156,11 @@ namespace FreshRoots.Controllers
             var orderItems = _db.OrderItems.Where(oi => farmerProductIds.Contains(oi.ProductId));
             _db.OrderItems.RemoveRange(orderItems);
 
-            // Delete farmer’s products
             var products = _db.Products.Where(p => p.FarmerId == id);
             _db.Products.RemoveRange(products);
 
-            // Delete farmer row
             _db.Farmers.Remove(farmer);
 
-            // Delete linked user
             var user = await _db.Users.FindAsync(farmer.UserId);
             if (user != null)
             {
@@ -181,11 +186,18 @@ namespace FreshRoots.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditBuyer(Buyer model)
         {
             if (ModelState.IsValid)
             {
-                _db.Buyers.Update(model);
+                var buyer = await _db.Buyers.FindAsync(model.BuyerId);
+                if (buyer == null) return NotFound();
+
+                buyer.FullName = model.FullName;
+                buyer.PhoneNumber = model.PhoneNumber;
+                buyer.Address = model.Address;
+
                 await _db.SaveChangesAsync();
                 return RedirectToAction("Buyers");
             }
@@ -200,6 +212,7 @@ namespace FreshRoots.Controllers
         }
 
         [HttpPost, ActionName("DeleteBuyer")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteBuyerConfirmed(int id)
         {
             var buyer = await _db.Buyers.FindAsync(id);
@@ -232,11 +245,21 @@ namespace FreshRoots.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditProduct(Product model)
         {
             if (ModelState.IsValid)
             {
-                _db.Products.Update(model);
+                var product = await _db.Products.FindAsync(model.Id);
+                if (product == null) return NotFound();
+
+                product.Name = model.Name;
+                product.Description = model.Description;
+                product.Price = model.Price;
+                product.StockQuantity = model.StockQuantity;
+                product.Category = model.Category;
+                product.HarvestDate = model.HarvestDate;
+
                 await _db.SaveChangesAsync();
                 return RedirectToAction("Products");
             }
@@ -251,12 +274,12 @@ namespace FreshRoots.Controllers
         }
 
         [HttpPost, ActionName("DeleteProduct")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteProductConfirmed(int id)
         {
             var product = await _db.Products.FindAsync(id);
             if (product == null) return NotFound();
 
-            // ✅ Delete order items first
             var orderItems = _db.OrderItems.Where(oi => oi.ProductId == id);
             _db.OrderItems.RemoveRange(orderItems);
 
@@ -283,11 +306,11 @@ namespace FreshRoots.Controllers
                 .FirstOrDefaultAsync(oi => oi.Id == id);
 
             if (orderItem == null) return NotFound();
-
             return View(orderItem);
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditOrderItem(OrderItem model)
         {
             if (ModelState.IsValid)
@@ -299,9 +322,7 @@ namespace FreshRoots.Controllers
                 orderItem.Quantity = model.Quantity;
                 orderItem.Status = model.Status;
 
-                _db.OrderItems.Update(orderItem);
                 await _db.SaveChangesAsync();
-
                 return RedirectToAction("Orders");
             }
             return View(model);
@@ -314,11 +335,11 @@ namespace FreshRoots.Controllers
                 .FirstOrDefaultAsync(oi => oi.Id == id);
 
             if (orderItem == null) return NotFound();
-
             return View(orderItem);
         }
 
         [HttpPost, ActionName("DeleteOrderItem")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOrderItemConfirmed(int id)
         {
             var orderItem = await _db.OrderItems
@@ -328,7 +349,6 @@ namespace FreshRoots.Controllers
             if (orderItem == null) return NotFound();
 
             var order = orderItem.Order;
-
             _db.OrderItems.Remove(orderItem);
 
             var remainingItems = await _db.OrderItems

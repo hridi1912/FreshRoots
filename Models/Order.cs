@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace FreshRoots.Models
 {
@@ -6,7 +7,6 @@ namespace FreshRoots.Models
     {
         public int Id { get; set; }
 
-        // Buyer is an ApplicationUser (string key)
         public string BuyerId { get; set; }
         public ApplicationUser Buyer { get; set; }
 
@@ -23,16 +23,19 @@ namespace FreshRoots.Models
     {
         public int Id { get; set; }
 
-        // Order relationship
         public int OrderId { get; set; }
+
+        [ValidateNever]   
         public Order Order { get; set; }
 
-        // Product relationship
         public int ProductId { get; set; }
+
+        [ValidateNever]
         public Product Product { get; set; }
 
-        // ✅ Farmer relationship (link to Farmer table, not ApplicationUser)
         public int FarmerId { get; set; }
+
+        [ValidateNever]
         public Farmer Farmer { get; set; }
 
         public int Quantity { get; set; }

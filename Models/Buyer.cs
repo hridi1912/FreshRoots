@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace FreshRoots.Models
 {
@@ -17,6 +18,7 @@ namespace FreshRoots.Models
         public string? Address { get; set; }
         public string? ProfilePicture { get; set; }
 
+        [ValidateNever]   
         public ApplicationUser User { get; set; } = null!;
     }
 }

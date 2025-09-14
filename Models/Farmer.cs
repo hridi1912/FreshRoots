@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace FreshRoots.Models
 {
@@ -18,9 +19,10 @@ namespace FreshRoots.Models
         public string? PickupLocation { get; set; }
         public string? ProfilePicture { get; set; }
 
+        [ValidateNever]   
         public ICollection<Product> Products { get; set; }
 
-
+        [ValidateNever]   
         public ApplicationUser User { get; set; } = null!;
     }
 }

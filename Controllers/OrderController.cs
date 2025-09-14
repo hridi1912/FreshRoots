@@ -127,8 +127,8 @@ namespace FreshRoots.Controllers
             return View(orders);
         }
 
-        // ✅ Buyer’s Orders Partial
-        public async Task<IActionResult> BuyersOrderPartial()
+        // ✅ Buyer's orders partial view for dashboard
+        public async Task<IActionResult> BuyersOrderPartial(int count=5)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return PartialView("BuyersOrderPartial", new List<Order>());
@@ -138,7 +138,7 @@ namespace FreshRoots.Controllers
                 .ThenInclude(oi => oi.Product)
                 .Where(o => o.BuyerId == user.Id)
                 .OrderByDescending(o => o.OrderDate)
-                .Take(5)
+                .Take(count)
                 .ToListAsync();
 
             return PartialView("BuyersOrderPartial", orders);

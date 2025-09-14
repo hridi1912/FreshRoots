@@ -1,249 +1,1081 @@
-﻿using FreshRoots.Data;
-using FreshRoots.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿@model IEnumerable<FreshRoots.Models.Product>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Buyer Dashboard - FreshRoots</title>
+    @* <link rel="stylesheet" href="~/css/BuyerHome.css" asp-append-version="true" /> *@
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 
-namespace FreshRoots.Controllers
-{
-    [Authorize]
-    public class OrdersController : Controller
-    {
-        private readonly ApplicationDbContext _db;
-        private readonly UserManager<ApplicationUser>
-    _userManager;
-
-    public OrdersController(ApplicationDbContext db, UserManager<ApplicationUser>
-        userManager)
-        {
-        _db = db;
-        _userManager = userManager;
+    <style>
+        :root {
+            --primary: #3a9949;
+            --primary-dark: #2a7c38;
+            --secondary: #f6b31d;
+            --light: #f9f9f9;
+            --dark: #2d2d2d;
+            --accent: #8bc34a;
         }
 
-        // ✅ Checkout page preview
-        public async Task<IActionResult>
-            Checkout()
-            {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return Unauthorized();
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f5f8f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-            var cartItems = await _db.CartItems
-            .Include(c => c.Product)
-            .Include(c => c.Cart)
-            .Where(c => c.Cart.BuyerId == user.Id)
-            .ToListAsync();
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+            color: var(--dark);
+            font-weight: 700;
+        }
 
-            if (!cartItems.Any())
-            return RedirectToAction("Index", "Cart");
+        /* Sidebar Styles */
+        .sidebar {
+            background: linear-gradient(to bottom, var(--primary), var(--primary-dark));
+            color: white;
+            width: 250px;
+            padding: 20px 0;
+            box-shadow: 3px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
 
-            var orderPreview = new Order
-            {
-            BuyerId = user.Id,
-            OrderDate = DateTime.Now,
-            Status = "Pending",
-            TotalAmount = cartItems.Sum(c => c.Quantity * c.Product.Price),
-            OrderItems = cartItems.Select(c => new OrderItem
-            {
-            ProductId = c.ProductId,
-            FarmerId = c.Product.FarmerId,
-            Quantity = c.Quantity,
-            Price = c.Product.Price,
-            Product = c.Product
-            }).ToList()
-            };
+        .sidebar-brand {
+            padding: 0 20px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
 
-            return View(orderPreview);
+            .sidebar-brand h2 {
+                color: white;
+                font-size: 24px;
+                margin: 0;
             }
 
-            // ✅ Place Order
-            [HttpPost]
-            public async Task<IActionResult>
-                PlaceOrder()
-                {
-                var user = await _userManager.GetUserAsync(User);
-                if (user == null) return Unauthorized();
+            .sidebar-brand span {
+                color: var(--secondary);
+            }
 
-                var cartItems = await _db.CartItems
-                .Include(c => c.Product)
-                .Include(c => c.Cart)
-                .Where(c => c.Cart.BuyerId == user.Id)
-                .ToListAsync();
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
 
-                if (!cartItems.Any())
-                return RedirectToAction("Index", "Cart");
+            .sidebar-menu li {
+                margin-bottom: 5px;
+            }
 
-                foreach (var item in cartItems)
-                {
-                item.Product.StockQuantity -= item.Quantity;
-                _db.Products.Update(item.Product);
+            .sidebar-menu a {
+                color: rgba(255, 255, 255, 0.8);
+                text-decoration: none;
+                display: block;
+                padding: 12px 20px;
+                transition: all 0.3s;
+                border-left: 3px solid transparent;
+            }
+
+                .sidebar-menu a:hover, .sidebar-menu a.active {
+                    background: rgba(255, 255, 255, 0.1);
+                    color: white;
+                    border-left: 3px solid var(--secondary);
                 }
 
-                var order = new Order
-                {
-                BuyerId = user.Id,
-                OrderDate = DateTime.Now,
-                Status = "Pending",
-                TotalAmount = cartItems.Sum(c => c.Quantity * c.Product.Price),
-                OrderItems = cartItems.Select(c => new OrderItem
-                {
-                ProductId = c.ProductId,
-                FarmerId = c.Product.FarmerId,
-                Quantity = c.Quantity,
-                Price = c.Product.Price,
-                Product = c.Product
-                }).ToList()
-                };
+            .sidebar-menu i {
+                width: 25px;
+                margin-right: 10px;
+            }
 
-                _db.Orders.Add(order);
-                _db.CartItems.RemoveRange(cartItems);
-                await _db.SaveChangesAsync();
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100vh;
+        }
 
-                return RedirectToAction("OrderConfirmation", new { orderId = order.Id });
+        .header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+            height: 100%;
+        }
+
+            .dashboard-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            background: rgba(58, 153, 73, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        /* Products Carousel */
+        .featured-products {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .product-card {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+            height: 100%;
+        }
+
+            .product-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            }
+
+        .product-img {
+            height: 180px;
+            overflow: hidden;
+        }
+
+            .product-img img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.5s;
+            }
+
+        .product-card:hover .product-img img {
+            transform: scale(1.05);
+        }
+
+        .product-info {
+            padding: 15px;
+        }
+
+        .product-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+
+        .product-farmer {
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .product-price {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .product-rating {
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+
+        /* Recent Orders */
+        .orders-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+            .order-item:last-child {
+                border-bottom: none;
+            }
+
+        .order-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .order-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-right: 15px;
+        }
+
+            .order-img img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+        .order-details h5 {
+            margin-bottom: 5px;
+        }
+
+        .order-date {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .order-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .status-delivered {
+            background: rgba(58, 153, 73, 0.1);
+            color: var(--primary);
+        }
+
+        .status-shipped {
+            background: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+            .btn-primary:hover {
+                background-color: var(--primary-dark);
+                border-color: var(--primary-dark);
+            }
+
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+
+            .btn-outline-primary:hover {
+                background-color: var(--primary);
+                border-color: var(--primary);
+                color: white;
+            }
+
+        /* Responsive */
+
+
+        {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+            height: auto;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            overflow-x: auto;
+        }
+
+            .sidebar-menu li {
+                margin-bottom: 0;
+                margin-right: 5px;
+            }
+
+            .sidebar-menu a {
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                padding: 10px 15px;
+                text-align: center;
+            }
+
+                .sidebar-menu a:hover, .sidebar-menu a.active {
+                    border-left: none;
+                    border-bottom: 3px solid var(--secondary);
                 }
 
-                // ✅ Order Confirmation
-                public async Task<IActionResult>
-                    OrderConfirmation(int orderId)
+            .sidebar-menu span {
+                font-size: 12px;
+            }
+
+        .main-content {
+            height: auto;
+            overflow-y: visible;
+        }
+
+
+
+
+
+        {
+            margin-right: 0;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-menu span {
+            display: block;
+        }
+
+        .header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .user-info {
+            margin-top: 10px;
+        }
+
+    </style>
+
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+            <li><a href="#"><i class="fas fa-store"></i> <span>Marketplace</span></a></li>
+            <li><a href="#orders" class="orders-link"> <i class="fas fa-shopping-cart"></i> <span>My Orders</span></a></li>
+            @* <li><a href="#"><i class="fas fa-heart"></i> <span>Wishlist</span></a></li> *@
+            <li><a href="#"><i class="fas fa-truck"></i> <span>Track Delivery</span></a></li>
+            <li><a href="#profile"><i class="fas fa-user"></i> <span>Profile</span></a></li>
+            @* <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li> *@
+            @* <li><a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li> *@
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h3>Welcome Back!</h3>
+            <div class="user-info">
+                <div class="user-avatar mb-3">
+                    @if (!string.IsNullOrEmpty(User.Identity.Name))
                     {
-                    var order = await _db.Orders
-                    .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                    .FirstOrDefaultAsync(o => o.Id == orderId);
-
-                    if (order == null) return NotFound();
-
-                    return View(order);
+                        @User.Identity.Name[0]
                     }
+                </div>
+                <div>
+                    <div>@User.Identity.Name</div>
 
-                    // ✅ Buyer’s Orders
-                    public async Task<IActionResult>
-                        MyOrders()
-                        {
-                        var user = await _userManager.GetUserAsync(User);
-                        if (user == null) return Unauthorized();
+                </div>
+            </div>
+        </div>
 
-                        var orders = await _db.Orders
-                        .Include(o => o.OrderItems)
-                        .ThenInclude(oi => oi.Product)
-                        .Where(o => o.BuyerId == user.Id)
-                        .OrderByDescending(o => o.OrderDate)
-                        .ToListAsync();
+        <!-- Stats Cards -->
+        <div class="row">
+            <!-- Active Orders -->
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="stat-number" data-stat="active-orders">@(ViewBag.ActiveOrders ?? 0)</div>
+                    <div class="stat-label">Active Orders</div>
+                </div>
+            </div>
 
-                        return View(orders);
-                        }
+            <!-- Total Spent -->
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-number" data-stat="total-spent">$@((ViewBag.TotalSpent ?? 0).ToString("N0"))</div>
+                    <div class="stat-label">Total Spent</div>
+                </div>
+            </div>
 
-                        // ✅ Buyer’s Orders Partial
-                        public async Task<IActionResult>
-                            BuyersOrderPartial()
-                            {
-                            var user = await _userManager.GetUserAsync(User);
-                            if (user == null) return PartialView("BuyersOrderPartial", new List<Order>
-                                ());
+            <!-- Carbon Footprint Saved -->
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-icon">
+                        <i class="fas fa-leaf"></i>
+                    </div>
+                    <div class="stat-number" data-stat="carbon-saved">@((ViewBag.CarbonSaved ?? 0).ToString("N1"))kg</div>
+                    <div class="stat-label">CO₂ Saved</div>
+                </div>
+            </div>
 
-                                var orders = await _db.Orders
-                                .Include(o => o.OrderItems)
-                                .ThenInclude(oi => oi.Product)
-                                .Where(o => o.BuyerId == user.Id)
-                                .OrderByDescending(o => o.OrderDate)
-                                .Take(5)
-                                .ToListAsync();
+            <!-- Total Deliveries -->
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="card-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="stat-number" data-stat="total-deliveries">@(ViewBag.TotalDeliveries ?? 0)</div>
+                    <div class="stat-label">Total Deliveries</div>
+                </div>
+            </div>
+        </div>
 
-                                return PartialView("BuyersOrderPartial", orders);
-                                }
+        <!-- Featured Products -->
+        <div class="featured-products">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>Featured Products</h4>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary">View All</a>
+            </div>
+            @if (Model != null && Model.Any())
+            {
+                <div class="row">
+                    @foreach (var item in Model)
+                    {
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="card h-100 shadow-sm">
+                                <!-- Product Image -->
+                                <img src="@(string.IsNullOrEmpty(item?.ImageUrl) ? "/images/default.png" : item.ImageUrl)"
+                                     class="card-img-top"
+                                     alt="@item?.Name ?? " Product Image""
+                                     style="height: 200px; object-fit: cover;">
 
-                                // ✅ Farmer’s Orders
-                                [Authorize(Roles = "Farmer")]
-                                public async Task<IActionResult>
-                                    FarmerOrders()
-                                    {
-                                    var userId = _userManager.GetUserId(User);
-                                    var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
-                                    if (farmer == null) return Unauthorized();
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">@item?.Name</h5>
+                                    <p class="card-text text-muted">@item?.Description ?? "No description available."</p>
 
-                                    var orderItems = await _db.OrderItems
-                                    .Include(oi => oi.Order).ThenInclude(o => o.Buyer)
-                                    .Include(oi => oi.Product)
-                                    .Where(oi => oi.FarmerId == farmer.FarmerId)
-                                    .OrderByDescending(oi => oi.Order.OrderDate)
-                                    .ToListAsync();
+                                    <!-- Farmer Info -->
+                                    <small class="text-muted">
+                                        <strong>Farm:</strong> @(item?.FarmerProfile?.FarmName ?? "Unknown Farm")<br>
+                                        <strong>Harvested:</strong> @(item?.HarvestDate != null ? item.HarvestDate.ToShortDateString() : "N/A")
+                                    </small>
 
-                                    return View("FarmerOrderPartial", orderItems);
-                                    }
+                                    <div class="mt-auto">
+                                        <h4 class="text-success mt-3">৳@(item?.Price.ToString("N2") ?? "0.00")</h4>
 
-                                    // ✅ Update Order Status
-                                    [HttpPost]
-                                    [Authorize(Roles = "Farmer")]
-                                    [ValidateAntiForgeryToken]
-                                    public async Task<IActionResult>
-                                        UpdateOrderStatus(int orderItemId, string status)
+                                        <!-- Stock Status -->
+                                        @if ((item?.StockQuantity ?? 0) > 0)
                                         {
-                                        var userId = _userManager.GetUserId(User);
-                                        var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
-                                        if (farmer == null) return Unauthorized();
-
-                                        var orderItem = await _db.OrderItems
-                                        .Include(oi => oi.Order)
-                                        .FirstOrDefaultAsync(oi => oi.Id == orderItemId && oi.FarmerId == farmer.FarmerId);
-
-                                        if (orderItem == null) return NotFound();
-
-                                        orderItem.Status = status;
-                                        _db.OrderItems.Update(orderItem);
-
-                                        var orderItems = await _db.OrderItems
-                                        .Where(oi => oi.OrderId == orderItem.OrderId)
-                                        .ToListAsync();
-
-                                        if (orderItems.All(oi => oi.Status == "Delivered"))
-                                        orderItem.Order.Status = "Delivered";
-                                        else if (orderItems.All(oi => oi.Status == "Shipped"))
-                                        orderItem.Order.Status = "Shipped";
-                                        else if (orderItems.Any(oi => oi.Status == "Processing"))
-                                        orderItem.Order.Status = "Processing";
-                                        else if (orderItems.Any(oi => oi.Status == "Pending"))
-                                        orderItem.Order.Status = "Pending";
-
-                                        _db.Orders.Update(orderItem.Order);
-                                        await _db.SaveChangesAsync();
-
-                                        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-                                        return Ok();
-
-                                        return RedirectToAction(nameof(FarmerOrders));
+                                            <span class="badge bg-success">In Stock (@(item?.StockQuantity ?? 0))</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Out of Stock</span>
                                         }
 
-                                        // ✅ Farmer’s Orders Partial
-                                        [Authorize(Roles = "Farmer")]
-                                        public async Task<IActionResult>
-                                            FarmerOrderPartial()
+                                        <!-- Action Buttons -->
+                                        <div class="d-grid gap-2 mt-3">
+                                            <a asp-controller="Products" asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-primary">View Details</a>
+                                            @if (item.StockQuantity > 0)
                                             {
-                                            var userId = _userManager.GetUserId(User);
-                                            var farmer = await _db.Farmers.FirstOrDefaultAsync(f => f.UserId == userId);
-                                            if (farmer == null) return PartialView("FarmerOrderPartial", new List<OrderItem>
-                                                ());
-
-                                                var orderItems = await _db.OrderItems
-                                                .Include(oi => oi.Order).ThenInclude(o => o.Buyer)
-                                                .Include(oi => oi.Product)
-                                                .Where(oi => oi.FarmerId == farmer.FarmerId)
-                                                .OrderByDescending(oi => oi.Order.OrderDate)
-                                                .Take(10)
-                                                .ToListAsync();
-
-                                                return PartialView("FarmerOrderPartial", orderItems);
-                                                }
-                                                }
-
-                                                // ViewModel for Farmer Orders
-                                                public class FarmerOrderViewModel
+                                                @if (User.IsInRole("Buyer"))
                                                 {
-                                                public int OrderId { get; set; }
-                                                public DateTime OrderDate { get; set; }
-                                                public string BuyerId { get; set; }
-                                                public string Status { get; set; }
-                                                public List<OrderItem>
-                                                    Items { get; set; }
-                                                    public decimal TotalAmount { get; set; }
-                                                    }
-                                                    }
+                                                    <form asp-controller="Cart" asp-action="AddToCart" method="post">
+                                                        <input type="hidden" name="productId" value="@item.Id" />
+                                                        <input type="hidden" name="quantity" value="1" />
+                                                        <button type="submit" class="btn btn-success w-100">Add to Cart</button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <button class="btn btn-secondary w-100" disabled>Only buyers can add to cart</button>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    <h4>No products found!</h4>
+                    <p>Try adjusting your search or filter criteria.</p>
+                    <a class="btn btn-outline-primary" href="/Products">View All Products</a>
+                </div>
+            }
+
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="orders-container">
+                    @* <h4 class="mb-4">Recent Orders</h4> *@
+                    <div id="buyer-orders-content">
+                        <!-- Orders will be loaded here via JavaScript -->
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-cart fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">Loading your orders...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+
+
+                <!-- Seasonal Offers -->
+                <div class="dashboard-card mt-4">
+                    <h4 class="mb-4">Seasonal Offers</h4>
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-tag me-2"></i>Autumn Harvest Sale</h6>
+                        <p class="mb-0">Get 15% off on all seasonal produce. Use code: HARVEST15</p>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-shipping-fast me-2"></i>Free Delivery</h6>
+                        <p class="mb-0">Free delivery on orders over $50 this week!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+                // ===== DASHBOARD STATS =====
+            let statsUpdateInterval;
+            let isUpdatingStats = false;
+
+            async function loadDashboardStats() {
+                if (isUpdatingStats) return; // Prevent multiple simultaneous updates
+                isUpdatingStats = true;
+
+                try {
+                    console.log('Loading dashboard stats...');
+
+                    const response = await fetch('/Products/GetBuyerDashboardStats');
+                    console.log('Response status:', response.status);
+
+                    if (response.ok) {
+                        const stats = await response.json();
+                        console.log('Stats received:', stats);
+
+                        // Update stats on the page WITHOUT animation
+                        updateDashboardStats(stats, false);
+                    } else {
+                        console.error('Failed to load statistics, status:', response.status);
+                    }
+                } catch (error) {
+                    console.error('Error loading dashboard stats:', error);
+                    showNotification('Error loading statistics. Please refresh the page.', 'error');
+                } finally {
+                    isUpdatingStats = false;
+                }
+            }
+
+            function updateDashboardStats(stats, animate = true) {
+                console.log('Updating dashboard stats with:', stats);
+
+                // Update the DOM elements directly
+                const activeOrdersEl = document.querySelector('[data-stat="active-orders"]');
+                const totalSpentEl = document.querySelector('[data-stat="total-spent"]');
+                const carbonSavedEl = document.querySelector('[data-stat="carbon-saved"]');
+                const totalDeliveriesEl = document.querySelector('[data-stat="total-deliveries"]');
+
+                if (activeOrdersEl) {
+                    const currentValue = parseInt(activeOrdersEl.textContent) || 0;
+                    const newValue = stats.activeOrders || 0;
+
+                    if (animate && newValue !== currentValue) {
+                        animateValue(activeOrdersEl, currentValue, newValue, '');
+                    } else {
+                        activeOrdersEl.textContent = newValue;
+                    }
+                }
+
+                if (totalSpentEl) {
+                    const currentValue = parseFloat(totalSpentEl.textContent.replace(/[^\d.]/g, '')) || 0;
+                    const newValue = stats.totalSpent || 0;
+
+                    if (animate && newValue !== currentValue) {
+                        animateValue(totalSpentEl, currentValue, newValue, '$');
+                    } else {
+                        totalSpentEl.textContent = '$' + newValue.toLocaleString();
+                    }
+                }
+
+                if (carbonSavedEl) {
+                    const currentValue = parseFloat(carbonSavedEl.textContent.replace('kg', '')) || 0;
+                    const newValue = stats.carbonSaved || 0;
+
+                    if (animate && newValue !== currentValue) {
+                        animateValue(carbonSavedEl, currentValue, newValue, '', 'kg');
+                    } else {
+                        carbonSavedEl.textContent = newValue.toFixed(1) + 'kg';
+                    }
+                }
+
+                if (totalDeliveriesEl) {
+                    const currentValue = parseInt(totalDeliveriesEl.textContent) || 0;
+                    const newValue = stats.totalDeliveries || 0;
+
+                    if (animate && newValue !== currentValue) {
+                        animateValue(totalDeliveriesEl, currentValue, newValue, '');
+                    } else {
+                        totalDeliveriesEl.textContent = newValue;
+                    }
+                }
+            }
+                    // Improved animation function
+            function animateValue(element, start, end, prefix = '', suffix = '') {
+                const duration = 1000;
+                const steps = 60;
+                const range = end - start;
+                const stepTime = duration / steps;
+                let currentStep = 0;
+
+                // Clear any existing animation on this element
+                if (element.animationTimer) {
+                    clearInterval(element.animationTimer);
+                }
+
+                element.animationTimer = setInterval(() => {
+                    currentStep++;
+                    const progress = currentStep / steps;
+                    const currentValue = start + (range * progress);
+
+                    if (currentStep >= steps) {
+                        clearInterval(element.animationTimer);
+                        element.textContent = prefix + (suffix ? end.toFixed(1) : Math.round(end)) + suffix;
+                    } else {
+                        if (suffix) {
+                            element.textContent = prefix + currentValue.toFixed(1) + suffix;
+                        } else {
+                            element.textContent = prefix + Math.round(currentValue);
+                        }
+                    }
+                }, stepTime);
+            }
+
+            // ===== REAL-TIME STATS UPDATES =====
+            function setupRealTimeUpdates() {
+                // Clear any existing interval
+                if (statsUpdateInterval) {
+                    clearInterval(statsUpdateInterval);
+                }
+
+                // Update stats every 30 seconds, but only if page is visible
+                statsUpdateInterval = setInterval(async () => {
+                    // Don't update if page is not visible
+                    if (document.hidden) return;
+
+                    try {
+                        const response = await fetch('/Products/GetBuyerDashboardStats?t=' + Date.now());
+                        if (response.ok) {
+                            const stats = await response.json();
+                            updateDashboardStats(stats, true); // Animate the changes
+                        }
+                    } catch (error) {
+                        console.error('Error fetching updated stats:', error);
+                    }
+                }, 30000);
+            }
+
+
+        // ===== ORDERS LOADING =====
+        async function loadOrders() {
+            try {
+                // Show loading state
+                const mainContent = document.querySelector('.main-content');
+                const originalContent = mainContent.innerHTML;
+
+                mainContent.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading your orders...</p>
+                    </div>
+                `;
+
+                    const response = await fetch('/Orders/BuyersOrderPartial?count=3');
+                if (response.ok) {
+                    const content = await response.text();
+
+                    // Replace the main content with orders
+                    mainContent.innerHTML = content;
+
+                    // Update active menu item
+                    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+
+                    const ordersLink = document.querySelector('.sidebar-menu a.orders-link');
+                    if (ordersLink) {
+                        ordersLink.classList.add('active');
+                    }
+
+                    // Initialize any order-specific JavaScript
+                    initOrderPage();
+                } else {
+                    throw new Error('Failed to load orders');
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showNotification('Error loading orders. Please try again.', 'error');
+
+                // Restore original content on error
+                if (originalContent) {
+                    mainContent.innerHTML = originalContent;
+                }
+            }
+        }
+
+        function initOrderPage() {
+            // Add any order page specific initialization here
+            console.log('Order page initialized');
+        }
+
+        // ===== PROFILE LOADING =====
+        async function loadProfile() {
+            try {
+                // Show loading state
+                const mainContent = document.querySelector('.main-content');
+                const originalContent = mainContent.innerHTML;
+
+                mainContent.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Loading profile...</p>
+                    </div>
+                `;
+
+                const response = await fetch('/Profile/ProfilePartial');
+                if (response.ok) {
+                    const content = await response.text();
+
+                    // Replace the main content with profile
+                    mainContent.innerHTML = content;
+
+                    // Update active menu item
+                    document.querySelectorAll('.sidebar-menu a').forEach(link => {
+                        link.classList.remove('active');
+                    });
+
+                    const profileLink = document.querySelector('.sidebar-menu a[href="#profile"]');
+                    if (profileLink) {
+                        profileLink.classList.add('active');
+                    }
+
+                    // Setup form handlers after profile loads
+                    setTimeout(setupProfileFormHandlers, 100);
+                } else {
+                    throw new Error('Failed to load profile');
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showNotification('Error loading profile. Please try again.', 'error');
+
+                // Restore original content on error
+                if (originalContent) {
+                    mainContent.innerHTML = originalContent;
+                }
+            }
+        }
+
+            function loadDashboard() {
+                window.location.reload();
+            }
+
+            async function loadRecentOrdersForDashboard() {
+                try {
+                    const container = document.getElementById('buyer-orders-content');
+                    if (!container) return;
+
+                    const response = await fetch('/Orders/BuyersOrderPartial?count=2');
+                    if (response.ok) {
+                        const html = await response.text();
+
+                        // Replace only the inner HTML of dashboard orders section
+                        container.innerHTML = html;
+                    } else {
+                        container.innerHTML = `
+                            <div class="text-center py-4 text-danger">
+                                Failed to load recent orders.
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error loading recent orders for dashboard:', error);
+                    const container = document.getElementById('buyer-orders-content');
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="text-center py-4 text-danger">
+                                Error loading recent orders.
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+
+        // ===== PROFILE FORM HANDLING =====
+        function setupProfileFormHandlers() {
+            // Handle profile form submission
+            const profileForm = document.getElementById('profileForm');
+            if (profileForm) {
+                profileForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await submitProfileForm(this);
+                });
+            }
+
+            // Handle change password button
+            const changePasswordBtn = document.querySelector('.change-password-btn');
+            if (changePasswordBtn) {
+                changePasswordBtn.addEventListener('click', function() {
+                    // Implement change password functionality
+                    const changePasswordForm = document.getElementById('changePasswordForm');
+                    if (changePasswordForm) {
+                        changePasswordForm.style.display = changePasswordForm.style.display === 'none' ? 'block' : 'none';
+                    }
+                });
+            }
+        }
+
+        function getVerificationToken() {
+            const tokenElement = document.querySelector('input[name="__RequestVerificationToken"]');
+            return tokenElement ? tokenElement.value : '';
+        }
+
+
+
+        // AJAX form submission
+        async function submitProfileForm(form) {
+            if (!validateProfileForm(form)) return;
+
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Updating...';
+            submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': getVerificationToken()
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Server error: " + response.status);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification(result.message, 'success');
+
+                    // ✅ Reload updated profile partial
+                    const res = await fetch('/Profile/ProfilePartial');
+                    if (res.ok) {
+                        const html = await res.text();
+                        const mainContent = document.querySelector('.main-content');
+                        if (mainContent) {
+                            mainContent.innerHTML = html;
+                            setupProfileFormHandlers(); // re-attach handlers
+                        }
+                    }
+                } else {
+                    showNotification(result.message || 'Profile update failed.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showNotification('Error updating profile. Please try again.', 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+
+
+
+                // Form validation
+            function validateProfileForm(form) {
+                const email = form.querySelector('input[name="Email"]');
+                const fullName = form.querySelector('input[name="FullName"]');
+
+                // Null check first
+                if (!email || !fullName) {
+                    alert('Form fields not found');
+                    return false;
+                }
+
+                if (!email.value || !fullName.value) {
+                    alert('Please fill in all required fields');
+                    return false;
+                }
+
+                return true;
+            }
+
+
+        // ===== NOTIFICATION SYSTEM =====
+        function showNotification(message, type = 'info') {
+            // Remove any existing notifications
+            const existingNotification = document.querySelector('.dashboard-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `dashboard-notification alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 1050; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            // Add to page
+            document.body.appendChild(notification);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // ===== REAL-TIME STATS UPDATES =====
+                function setupRealTimeUpdates() {
+                // Update stats every 30 seconds
+                setInterval(async () => {
+                    try {
+                        // CHANGE THIS LINE TOO
+                        const response = await fetch('/Products/GetBuyerDashboardStats');
+                        if (response.ok) {
+                            const stats = await response.json();
+                            updateDashboardStats(stats);
+                        }
+                    } catch (error) {
+                        console.error('Error fetching updated stats:', error);
+                    }
+                }, 30000);
+            }
+
+                   // ===== INITIAL SETUP =====
+            document.addEventListener('DOMContentLoaded', function() {
+                // Load latest stats immediately but don't animate initial load
+                setTimeout(() => loadDashboardStats(), 1000);
+
+                // Set up navigation handlers
+                const profileLink = document.querySelector('.sidebar-menu a[href="#profile"]');
+                if (profileLink) {
+                    profileLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        loadProfile();
+                    });
+                }
+
+                const ordersLink = document.querySelector('.sidebar-menu a.orders-link');
+                if (ordersLink) {
+                    ordersLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        loadOrders();
+                    });
+                }
+
+                const dashboardLink = document.querySelector('.sidebar-menu a[href="#"]');
+                if (dashboardLink) {
+                    dashboardLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        loadDashboard();
+                    });
+                }
+                    loadRecentOrdersForDashboard();
+
+                // Other sidebar links
+                const otherLinks = document.querySelectorAll('.sidebar-menu a:not([href="#profile"]):not(.orders-link):not([href="#"])');
+                otherLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const span = this.querySelector('span');
+                        showNotification(`${span ? span.textContent : 'This feature'} is coming soon!`, 'info');
+                    });
+                });
+
+
+
+                // Initial setup for any forms on page load
+                setupProfileFormHandlers();
+
+                // Setup real-time updates
+                setupRealTimeUpdates();
+
+                // Clean up on page unload
+                window.addEventListener('beforeunload', function() {
+                    if (statsUpdateInterval) {
+                        clearInterval(statsUpdateInterval);
+                    }
+                });
+            });
+    </script>
+</body>
+</html>
