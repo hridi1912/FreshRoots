@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FreshRoots.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250910124737_FixProductFarmerRelation")]
-    partial class FixProductFarmerRelation
+    [Migration("20250914130840_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -198,6 +198,10 @@ namespace FreshRoots.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
