@@ -1,0 +1,24 @@
+﻿@model IEnumerable<FreshRoots.ViewModels.FavouriteFarmerViewModel>
+
+<div class="row">
+    @if (!Model.Any())
+    {
+        <div class="col-12 text-center py-5">
+            <p>No favourite farmers yet 🌱 (order more to see them here!)</p>
+        </div>
+    }
+    else
+    {
+        @foreach (var fav in Model)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center">
+                        <h5>@fav.FarmerName</h5>
+                        <span class="badge bg-success">Ordered @fav.OrdersCount times</span>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

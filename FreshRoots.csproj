@@ -27,16 +27,32 @@
 
   <ItemGroup>
 
+    <Compile Remove="Controllers\CarbonController.cs" />
+
+    <Compile Remove="Controllers\FavouriteFarmersController.cs" />
+
     <Compile Remove="Views\AboutUs.cs" />
+
+    <Compile Remove="Views\Shared\TrackCarbonPartial.cshtml.cs" />
+
+    <Compile Remove="Views\Shared\_CarbonFootprint.cshtml.cs" />
+
+    <Compile Remove="Views\Shared\_FavouriteFarmers.cshtml.cs" />
+
+    <Compile Remove="Views\Shared\_FavouriteFarmersPartial.cshtml.cs" />
 
     <Compile Remove="Views\Shared\_ProfilePartial.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="Views\Shared\TrackCarbonPartial.cshtml" />
+    <Content Remove="Views\Shared\TrackCarbonPartial.razor" />
+    <Content Remove="Views\Shared\_FavouriteFarmersPartial.cshtml" />
     <Content Remove="wwwroot\css\FarmerHome.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="FreshRoots.csproj.Backup.tmp" />
     <None Remove="Views\AboutUs" />
   </ItemGroup>
 
