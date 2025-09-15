@@ -1,24 +1,419 @@
 ﻿@model FreshRoots.ViewModels.CarbonfootprintViewModel
+@{
+    // Convert values to consistent types for calculations
+    double totalCarbonSaved = (double)Model.TotalCarbonSaved;
+    double carEquivalent = totalCarbonSaved / 0.4;
+    double treeEquivalent = totalCarbonSaved / 21.8;
+    double energyEquivalent = totalCarbonSaved / 0.7;
+}
 
-<div class="card p-4 shadow-sm">
-    <h4 class="mb-3">🌱 Your Carbon Footprint Saved</h4>
-    <p><strong>Total Carbon Saved:</strong> @Model.TotalCarbonSaved kg CO2</p>
-    <p><strong>Delivered Orders:</strong> @Model.DeliveredOrdersCount</p>
-    <p><strong>Total Items Purchased:</strong> @Model.TotalItems</p>
+<div class="carbon-footprint-card">
+    <div class="carbon-header">
+        <div class="carbon-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 6h18"></path>
+                <path d="M3 12h15a3 3 0 1 0 0-6H3"></path>
+                <path d="M3 18h15a3 3 0 1 0 0-6H3"></path>
+                <path d="m16 16 2 2 4-4"></path>
+            </svg>
+        </div>
+        <h2>Your Environmental Impact</h2>
+        <p class="carbon-subtitle">By choosing local produce, you're making a difference</p>
+    </div>
 
-    <div class="progress mt-3" style="height: 20px;">
-        <div class="progress-bar bg-success" role="progressbar"
-             style="width:@Math.Min((double)Model.TotalCarbonSaved, 100)%">
-            @Model.TotalCarbonSaved kg
+    <div class="carbon-stats">
+        <div class="stat-card">
+            <div class="stat-icon" style="background-color: rgba(46, 139, 87, 0.1);">
+                <i class="fas fa-leaf" style="color: #2E8B57;"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@totalCarbonSaved.ToString("0.##") kg</h3>
+                <p>CO₂ Saved</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background-color: rgba(255, 166, 43, 0.1);">
+                <i class="fas fa-truck" style="color: #FFA62B;"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.DeliveredOrdersCount</h3>
+                <p>Delivered Orders</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon" style="background-color: rgba(255, 126, 95, 0.1);">
+                <i class="fas fa-shopping-basket" style="color: #FF7E5F;"></i>
+            </div>
+            <div class="stat-content">
+                <h3>@Model.TotalItems</h3>
+                <p>Items Purchased</p>
+            </div>
         </div>
     </div>
+
+    <div class="carbon-progress">
+        <div class="progress-header">
+            <h4>Your Carbon Savings Progress</h4>
+            <span>@totalCarbonSaved.ToString("0.##") kg of 100 kg</span>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" style="width: @Math.Min(totalCarbonSaved, 100)%">
+                <div class="progress-label">@Math.Min(totalCarbonSaved, 100).ToString("0")%</div>
+            </div>
+        </div>
+
+        <div class="progress-milestones">
+            <div class="milestone" style="left: 25%">
+                <div class="milestone-marker"></div>
+                <span class="milestone-label">25 kg</span>
+            </div>
+            <div class="milestone" style="left: 50%">
+                <div class="milestone-marker"></div>
+                <span class="milestone-label">50 kg</span>
+            </div>
+            <div class="milestone" style="left: 75%">
+                <div class="milestone-marker"></div>
+                <span class="milestone-label">75 kg</span>
+            </div>
+            <div class="milestone" style="left: 100%">
+                <div class="milestone-marker"></div>
+                <span class="milestone-label">100 kg</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="carbon-comparison">
+        <h4>Your savings are equivalent to:</h4>
+        <div class="comparison-items">
+            <div class="comparison-item">
+                <div class="comparison-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="comparison-details">
+                    <h5>@carEquivalent.ToString("0") km</h5>
+                    <p>Not driven by car</p>
+                </div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-icon">
+                    <i class="fas fa-tree"></i>
+                </div>
+                <div class="comparison-details">
+                    <h5>@treeEquivalent.ToString("0")</h5>
+                    <p>Tree seedlings grown</p>
+                </div>
+            </div>
+            <div class="comparison-item">
+                <div class="comparison-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="comparison-details">
+                    <h5>@energyEquivalent.ToString("0") kWh</h5>
+                    <p>Electricity saved</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="carbon-tips">
+        <h4>Tips to reduce your carbon footprint further:</h4>
+        <ul>
+            <li><i class="fas fa-seedling"></i> Choose seasonal produce</li>
+            <li><i class="fas fa-recycle"></i> Use reusable bags</li>
+            <li><i class="fas fa-bicycle"></i> Select bike delivery when available</li>
+            <li><i class="fas fa-utensils"></i> Reduce food waste</li>
+        </ul>
+    </div>
 </div>
+
 <style>
-    .card {
-        background-color: #f9f9f9;
-        border-radius: 10px;
+    .carbon-footprint-card {
+        background: linear-gradient(to bottom, #ffffff, #f8fbf9);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        padding: 2rem;
+        font-family: 'Open Sans', sans-serif;
+        color: #2D3748;
+        max-width: 800px;
+        margin: 0 auto;
     }
+
+    .carbon-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .carbon-icon {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, #2E8B57, #3DA76A);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+
+        .carbon-icon svg {
+            width: 35px;
+            height: 35px;
+            color: white;
+        }
+
+    .carbon-header h2 {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        color: #2D3748;
+        margin-bottom: 0.5rem;
+    }
+
+    .carbon-subtitle {
+        color: #718096;
+        font-size: 1rem;
+    }
+
+    .carbon-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.2rem;
+    }
+
+    .stat-content h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: #2D3748;
+    }
+
+    .stat-content p {
+        color: #718096;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .carbon-progress {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+        .progress-header h4 {
+            font-weight: 600;
+            margin: 0;
+            color: #2D3748;
+        }
+
+        .progress-header span {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+    .progress-container {
+        height: 20px;
+        background-color: #E2E8F0;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
     .progress-bar {
-        font-weight: bold;
+        height: 100%;
+        background: linear-gradient(to right, #3DA76A, #2E8B57);
+        border-radius: 10px;
+        position: relative;
+        transition: width 1s ease-in-out;
+    }
+
+    .progress-label {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .progress-milestones {
+        position: relative;
+        height: 30px;
+    }
+
+    .milestone {
+        position: absolute;
+        transform: translateX(-50%);
+        text-align: center;
+    }
+
+    .milestone-marker {
+        width: 6px;
+        height: 6px;
+        background-color: #A0AEC0;
+        border-radius: 50%;
+        margin: 0 auto 5px;
+    }
+
+    .milestone-label {
+        font-size: 0.75rem;
+        color: #718096;
+    }
+
+    .carbon-comparison {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+        .carbon-comparison h4 {
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            color: #2D3748;
+        }
+
+    .comparison-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .comparison-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .comparison-icon {
+        width: 45px;
+        height: 45px;
+        background: #F8FBF9;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        color: #2E8B57;
+        font-size: 1.1rem;
+    }
+
+    .comparison-details h5 {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        color: #2D3748;
+    }
+
+    .comparison-details p {
+        color: #718096;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .carbon-tips {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+        .carbon-tips h4 {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2D3748;
+        }
+
+        .carbon-tips ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .carbon-tips li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #EDF2F7;
+        }
+
+            .carbon-tips li:last-child {
+                border-bottom: none;
+            }
+
+        .carbon-tips i {
+            color: #2E8B57;
+            margin-right: 0.75rem;
+            width: 20px;
+        }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .carbon-footprint-card {
+            padding: 1.5rem;
+        }
+
+        .carbon-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .progress-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .comparison-items {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
+
+<script>
+    // Simple animation for the progress bar
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressBar = document.querySelector('.progress-bar');
+        const computedWidth = progressBar.style.width;
+        progressBar.style.width = '0';
+
+        setTimeout(function() {
+            progressBar.style.width = computedWidth;
+        }, 300);
+    });
+</script>

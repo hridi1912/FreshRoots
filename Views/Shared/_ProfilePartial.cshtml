@@ -1,112 +1,594 @@
 ﻿@model FreshRoots.Models.ProfileViewModel
 @{
-    string cacheBuster = DateTime.Now.Ticks.ToString(); // prevents stale image
+    string cacheBuster = DateTime.Now.Ticks.ToString();
+    bool isFarmer = ViewBag.ProfileType == "Farmer";
 }
-<link rel="stylesheet" href="~/css/_ProfilePartial.css" asp-append-version="true" />
 
-<div id="profile-partial-root" class="profile-container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4><i class="fas fa-user me-2"></i>My Profile</h4>
-        <button class="btn btn-outline-secondary" onclick="loadDashboard()">
-            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-        </button>
-    </div>
-
-    @if (ViewBag.Message != null)
-    {
-        <div class="alert alert-success">@ViewBag.Message</div>
+<style>
+    :root {
+        --primary: #2E8B57;
+        --primary-light: #3DA76A;
+        --primary-dark: #257348;
+        --secondary: #FFA62B;
+        --light: #F8FBF9;
+        --dark: #2D3748;
+        --gray: #718096;
+        --light-gray: #E2E8F0;
+        --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
     }
 
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <div class="d-flex flex-column align-items-center">
-                        @if (!string.IsNullOrWhiteSpace(Model.ProfilePicture))
-                        {
-                            <img src="@($"{Model.ProfilePicture}?t={cacheBuster}")" alt="Profile picture"
-                                 style="width:90px;height:90px;object-fit:cover"
-                                 class="rounded-circle mb-3 border" />
-                        }
-                        else if (!string.IsNullOrEmpty(Model.FullName))
-                        {
-                            <div class="user-avatar-large mb-3">
-                                @Model.FullName[0]
-                            </div>
-                        }
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-                        <h4 class="mb-0">@Model.FullName</h4>
-                        <p class="text-muted mb-0">@ViewBag.ProfileType</p>
-                    </div>
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--light-gray);
+    }
+
+    .profile-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        color: var(--dark);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+        .profile-title i {
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+    .back-btn {
+        background: white;
+        color: var(--primary);
+        border: 2px solid var(--primary);
+        border-radius: 8px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+        .back-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 139, 87, 0.2);
+        }
+
+    .profile-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        transition: transform 0.3s, box-shadow 0.3s;
+        height: 100%;
+        border: none;
+    }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+        }
+
+    .avatar-container {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .profile-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .default-avatar-large {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3.5rem;
+        font-weight: 700;
+        border: 4px solid white;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .avatar-overlay {
+        position: absolute;
+        bottom: 10px;
+        right: calc(50% - 70px);
+        background: var(--primary);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.3s;
+        transform: translateY(10px);
+    }
+
+    .avatar-container:hover .avatar-overlay {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .user-info-card {
+        text-align: center;
+        padding: 2.5rem 2rem;
+    }
+
+    .user-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .user-role {
+        color: var(--primary);
+        font-weight: 600;
+        background: rgba(46, 139, 87, 0.1);
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        display: inline-block;
+        margin-bottom: 1.5rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: var(--light);
+        border-radius: 12px;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--gray);
+    }
+
+    .form-card {
+        padding: 2.5rem;
+    }
+
+    .form-section-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--light-gray);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+        .form-section-title i {
+            color: var(--primary);
+        }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .form-label i {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+    .form-control {
+        padding: 0.875rem 1rem;
+        border: 2px solid var(--light-gray);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background-color: white;
+    }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(46, 139, 87, 0.15);
+        }
+
+        .form-control:read-only {
+            background-color: #f8f9fa;
+            opacity: 0.8;
+        }
+
+    .file-upload-container {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .file-upload-label {
+        display: block;
+        padding: 1.5rem;
+        border: 2px dashed var(--light-gray);
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #fafafa;
+    }
+
+        .file-upload-label:hover {
+            border-color: var(--primary);
+            background: rgba(46, 139, 87, 0.05);
+        }
+
+    .file-upload-icon {
+        font-size: 2rem;
+        color: var(--primary);
+        margin-bottom: 0.75rem;
+    }
+
+    .file-upload-text {
+        color: var(--gray);
+        margin-bottom: 0.5rem;
+    }
+
+    .file-upload-hint {
+        font-size: 0.85rem;
+        color: var(--gray);
+    }
+
+    .file-input {
+        position: absolute;
+        width: 0.1px;
+        height: 0.1px;
+        opacity: 0;
+        overflow: hidden;
+        z-index: -1;
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border: none;
+        border-radius: 10px;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: white;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(46, 139, 87, 0.3);
+    }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(46, 139, 87, 0.4);
+        }
+
+    .alert-success {
+        background: rgba(46, 139, 87, 0.1);
+        border: 1px solid var(--primary);
+        color: var(--primary-dark);
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .validation-summary {
+        background: #fff5f5;
+        border: 1px solid #fed7d7;
+        color: #c53030;
+        border-radius: 10px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 992px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .profile-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .profile-card {
+            margin-bottom: 1.5rem;
+        }
+
+        .user-info-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .form-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .profile-avatar,
+        .default-avatar-large {
+            width: 120px;
+            height: 120px;
+        }
+    }
+</style>
+
+<div class="profile-container">
+    <!-- Header -->
+    <div class="profile-header">
+        <h1 class="profile-title">
+            <i class="fas fa-user-circle"></i>My Profile
+        </h1>
+        <a href="#" onclick="loadDashboard(); return false;" class="back-btn">
+            <i class="fas fa-arrow-left"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Success Message -->
+    @if (ViewBag.Message != null)
+    {
+        <div class="alert-success">
+            <i class="fas fa-check-circle me-2"></i>@ViewBag.Message
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Profile Card -->
+        <div class="col-lg-4 col-md-5">
+            <div class="profile-card user-info-card">
+                <div class="avatar-container">
+                    @if (!string.IsNullOrWhiteSpace(Model.ProfilePicture))
+                    {
+                        <img src="@($"{Model.ProfilePicture}?t={cacheBuster}")"
+                             alt="Profile picture"
+                             class="profile-avatar" />
+                    }
+                    else if (!string.IsNullOrEmpty(Model.FullName))
+                    {
+                        <div class="default-avatar-large">
+                            @Model.FullName[0]
+                        </div>
+                    }
+                    @* <label for="avatarUpload" class="avatar-overlay">
+                        <i class="fas fa-camera"></i>
+                        <input type="file" id="avatarUpload" class="file-input"
+                               name="profileImageFile" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                    </label> *@
                 </div>
+
+                <h2 class="user-name">@Model.FullName</h2>
+                <div class="user-role">
+                    <i class="fas fa-user-tag me-1"></i>@ViewBag.ProfileType
+                </div>
+
+                @* <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">@(ViewBag.ProductCount ?? 0)</div>
+                        <div class="stat-label">Products</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">@(ViewBag.OrderCount ?? 0)</div>
+                        <div class="stat-label">Orders</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">@(ViewBag.CustomerCount ?? 0)</div>
+                        <div class="stat-label">Customers</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">@(ViewBag.Rating ?? "5.0")</div>
+                        <div class="stat-label">Rating</div>
+                    </div>
+                </div> *@
             </div>
         </div>
 
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <h5>Profile Information</h5>
+        <!-- Profile Form -->
+        <div class="col-lg-8 col-md-7">
+            <div class="profile-card form-card">
+                <h3 class="form-section-title">
+                    <i class="fas fa-user-edit"></i>Profile Information
+                </h3>
 
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+                <!-- Validation Summary -->
+                <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
-                    <form id="profileForm"
-                          asp-action="ProfilePartial"
-                          asp-controller="Profile"
-                          method="post"
-                          enctype="multipart/form-data">
-                        @Html.AntiForgeryToken()
+                <form id="profileForm"
+                      asp-action="ProfilePartial"
+                      asp-controller="Profile"
+                      method="post"
+                      enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="FullName" class="form-label"></label>
-                                <input asp-for="FullName" class="form-control" />
-                            </div>
-                            <div class="col-md-6">
-                                <label asp-for="PhoneNumber" class="form-label"></label>
-                                <input asp-for="PhoneNumber" class="form-control" />
-                            </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FullName" class="form-label">
+                                <i class="fas fa-signature"></i>Full Name
+                            </label>
+                            <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
                         </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="Email" class="form-label"></label>
-                                <input asp-for="Email" class="form-control" readonly />
-                            </div>
-                            <div class="col-md-6">
-                                <input type="hidden" name="UserType" value="@ViewBag.ProfileType" />
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">
+                                <i class="fas fa-phone"></i>Phone Number
+                            </label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="Enter your phone number" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
                         </div>
+                    </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label asp-for="Address" class="form-label"></label>
-                                <input asp-for="Address" class="form-control" />
-                            </div>
-                            <div class="col-md-6">
-                                @if (ViewBag.ProfileType == "Farmer")
-                                {
-                                    <label asp-for="PickupLocation" class="form-label"></label>
-                                    <input asp-for="PickupLocation" class="form-control" />
-                                }
-                            </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label">
+                                <i class="fas fa-envelope"></i>Email Address
+                            </label>
+                            <input asp-for="Email" class="form-control" readonly />
+                            <small class="text-muted">Email cannot be changed</small>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <input type="hidden" name="UserType" value="@ViewBag.ProfileType" />
+                        </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Profile Picture</label>
-                            <input type="file" name="profileImageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" />
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Address" class="form-label">
+                                <i class="fas fa-home"></i>Address
+                            </label>
+                            <input asp-for="Address" class="form-control" placeholder="Enter your address" />
+                            <span asp-validation-for="Address" class="text-danger small"></span>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            @if (isFarmer)
+                            {
+                                <label asp-for="PickupLocation" class="form-label">
+                                    <i class="fas fa-map-marker-alt"></i>Pickup Location
+                                </label>
+                                <input asp-for="PickupLocation" class="form-control" placeholder="Enter pickup location" />
+                                <span asp-validation-for="PickupLocation" class="text-danger small"></span>
+                            }
+                        </div>
+                    </div>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Update Profile
-                            </button>
-                            @* <button type="button" class="btn btn-outline-secondary change-password-btn">
-                                <i class="fas fa-lock me-2"></i>Change Password
-                            </button> *@
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-camera"></i>Profile Picture
+                        </label>
+                        <div class="file-upload-container">
+                            <label for="profileImage" class="file-upload-label">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">Click to upload or drag and drop</div>
+                                <div class="file-upload-hint">JPG, PNG, WEBP or GIF (Max. 5MB)</div>
+                            </label>
+                            <input type="file" id="profileImage" class="file-input"
+                                   name="profileImageFile" accept=".jpg,.jpeg,.png,.webp,.gif" />
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <div class="d-flex gap-3 flex-wrap">
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-save"></i>Update Profile
+                        </button>
+                        @* <a href="#" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-lock me-2"></i>Change Password
+                        </a> *@
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Enhance file upload functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('profileImage');
+        const avatarUpload = document.getElementById('avatarUpload');
+        const fileUploadLabel = document.querySelector('.file-upload-label');
+
+        // Handle file selection from both places
+        const handleFileSelect = (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                // Update UI to show selected file name
+                fileUploadLabel.innerHTML = `
+                    <div class="file-upload-icon text-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="file-upload-text">${file.name}</div>
+                    <div class="file-upload-hint">Click to change</div>
+                `;
+
+                // Preview image if it's an image file
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (document.querySelector('.profile-avatar')) {
+                            document.querySelector('.profile-avatar').src = e.target.result;
+                        } else if (document.querySelector('.default-avatar-large')) {
+                            const avatar = document.querySelector('.default-avatar-large');
+                            avatar.innerHTML = '';
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.className = 'profile-avatar';
+                            img.style.objectFit = 'cover';
+                            avatar.parentNode.replaceChild(img, avatar);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        };
+
+        fileInput.addEventListener('change', handleFileSelect);
+        avatarUpload.addEventListener('change', handleFileSelect);
+
+        // Enable drag and drop
+        fileUploadLabel.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--primary)';
+            this.style.background = 'rgba(46, 139, 87, 0.1)';
+        });
+
+        fileUploadLabel.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--light-gray)';
+            this.style.background = '#fafafa';
+        });
+
+        fileUploadLabel.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--light-gray)';
+            this.style.background = '#fafafa';
+
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        });
+    });
+</script>

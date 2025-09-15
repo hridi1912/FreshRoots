@@ -442,5 +442,36 @@ namespace FreshRoots.Controllers
 
             return PartialView("_CarbonFootprint", vm);
         }
+
+        [Authorize(Roles = "Buyer")]
+        [HttpGet]
+        public async Task<IActionResult> FavouriteFarmers()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            // Get delivered orders of this buyer
+            var deliveredOrders = await _db.Orders
+                .Where(o => o.BuyerId == userId && o.Status == "Delivered")
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Farmer)
+                .ToListAsync();
+
+            // Defensive: ignore items without Farmer
+            var favouriteFarmers = deliveredOrders
+                .SelectMany(o => o.OrderItems)
+                .Where(oi => oi.Farmer != null) // ✅ avoid null ref
+                .GroupBy(oi => oi.FarmerId)
+                .Where(g => g.Count() >= 2) // condition: ordered from this farmer 2+ times
+                .Select(g => new FavouriteFarmerViewModel
+                {
+                    FarmerId = g.Key,
+                    FarmerName = g.First().Farmer.FullName,
+                    OrdersCount = g.Count()
+                })
+                .ToList();
+
+            return PartialView("_FavouriteFarmers", favouriteFarmers);
+        }
+
     }
 }

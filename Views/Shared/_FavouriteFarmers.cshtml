@@ -1,0 +1,46 @@
+﻿@model IEnumerable<FreshRoots.ViewModels.FavouriteFarmerViewModel>
+
+<div class="container py-4">
+    <h4 class="fw-bold mb-4 text-primary">
+        <i class=" me-2 text-danger"></i> Favourite Farmers
+    </h4>
+
+    <div class="row g-4">
+        @if (!Model.Any())
+        {
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-seedling fa-3x text-muted mb-3"></i>
+                <p class="lead text-muted">No favourite farmers yet 🌱<br />Order more to see them here!</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var fav in Model)
+            {
+                <div class="col-md-4 col-sm-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <div class="mb-3">
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto shadow-sm"
+                                     style="width:80px; height:80px; font-size:28px; font-weight:bold; color:#28a745;">
+                                    @fav.FarmerName[0] <!-- Initial letter as avatar -->
+                                </div>
+                            </div>
+
+                            <h5 class="fw-bold mb-1">@fav.FarmerName</h5>
+                            <p class="text-muted small mb-3">Trusted Farmer</p>
+
+                            <span class="badge bg-success px-3 py-2 mb-3">
+                                <i class="fas fa-shopping-basket me-1"></i> Ordered @fav.OrdersCount times
+                            </span>
+
+                            @* <a href="/Farmer/Profile/@fav.FarmerId" class="btn btn-outline-primary btn-sm mt-auto">
+                                <i class="fas fa-eye me-1"></i> View Profile
+                            </a> *@
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

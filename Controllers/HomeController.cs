@@ -56,10 +56,14 @@ namespace FreshRoots.Controllers
                 : null;
 
             // Products owned by this farmer
+            //var farmerProducts = await _db.Products
+            //    .Where(p => p.FarmerId == farmer.FarmerId)
+            //    .OrderBy(p => p.Id)
+            //    .ToListAsync();
             var farmerProducts = await _db.Products
-                .Where(p => p.FarmerId == farmer.FarmerId)
-                .OrderBy(p => p.Id)
-                .ToListAsync();
+               .Include(p => p.Farmer)  // optional: load farmer details
+               .OrderBy(p => p.Id)
+               .ToListAsync();
 
             // All order items related to this farmer
             var orderItems = await _db.OrderItems
@@ -83,8 +87,8 @@ namespace FreshRoots.Controllers
                 .Distinct()
                 .Count();
 
-            int activeProducts = farmerProducts.Count(p => p.StockQuantity > 0);
-
+            int activeProducts = await _db.Products
+                .CountAsync(p => p.FarmerId == farmer.FarmerId && p.StockQuantity > 0);
             // Pass to View
             ViewBag.NewOrders = newOrders;
             ViewBag.TotalRevenue = totalRevenue;
