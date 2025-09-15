@@ -1,0 +1,74 @@
+﻿@model IEnumerable<FreshRoots.Models.Buyer>
+
+<div class="customers-table">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4>My Customers</h4>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            <i class="fas fa-users fa-2x mb-2"></i><br />
+                            No customers found yet.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var c in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    @if (!string.IsNullOrEmpty(c.ProfilePicture))
+                                    {
+                                        <img src="@c.ProfilePicture"
+                                             alt="@c.FullName"
+                                             class="rounded-circle me-3"
+                                             width="40" height="40"
+                                             style="object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <div class="rounded-circle bg-success text-white d-flex justify-content-center align-items-center me-3"
+                                             style="width: 40px; height: 40px; font-weight: 600;">
+                                            @c.FullName?.FirstOrDefault().ToString().ToUpper()
+                                        </div>
+                                    }
+                                    <div>
+                                        <strong>@c.FullName</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <td>@c.PhoneNumber</td>
+                            @if (c.Address == null)
+                                {
+                                <td>
+                                    N/A
+                                </td>
+                                } else {
+                                <td>
+                                        @c.Address
+                                    </td>
+                                }
+                            
+                            
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

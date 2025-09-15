@@ -36,6 +36,7 @@
             <div class="user-info">
                 <div class="user-avatar mb-3">
                     @if (ViewBag.ProfilePicturePath != null)
+
                     {
                         <img src="@ViewBag.ProfilePicturePath"
                              alt="Profile Picture"
@@ -43,6 +44,7 @@
                     }
                     else if (!string.IsNullOrEmpty(User.Identity.Name))
                     {
+
                         <span class="default-avatar">
                             @User.Identity.Name[0]
                         </span>
@@ -276,6 +278,7 @@
                     } else {
                         totalSpentEl.textContent = '$' + newValue.toLocaleString();
                     }
+
                 }
 
                 if (carbonSavedEl) {
@@ -452,8 +455,10 @@
                 if (originalContent) {
                     mainContent.innerHTML = originalContent;
                 }
+
             }
         }
+
 
             function loadDashboard() {
                 window.location.reload();
@@ -551,12 +556,16 @@
                     document.querySelector('.sidebar-menu a[href="#favourites"]').classList.add('active');
                 } else {
                     mainContent.innerHTML = <div class="text-danger text-center py-4">Failed to load favourites.</div>;
+
                 }
             } catch (err) {
                 mainContent.innerHTML = <div class="text-danger text-center py-4">Error loading favourites.</div>;
             }
         }
 
+            function loadDashboard() {
+                window.location.reload();
+            }
 
 
                 // ===== PROFILE FORM HANDLING =====
@@ -608,6 +617,7 @@
                         'RequestVerificationToken': getVerificationToken()
                     }
                 });
+
 
                 if (!response.ok) {
                     throw new Error("Server error: " + response.status);
@@ -774,6 +784,7 @@
 
                 // Setup real-time updates
                 setupRealTimeUpdates();
+
 
                 // Clean up on page unload
                 window.addEventListener('beforeunload', function() {

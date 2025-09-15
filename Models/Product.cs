@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace FreshRoots.Models
 {
@@ -20,7 +21,6 @@ namespace FreshRoots.Models
         [Range(0, 100000)]
         public int StockQuantity { get; set; }
 
-        // Stores relative web path like /images/products/abcd.png
         public string? ImageUrl { get; set; }
 
         [Required, StringLength(64)]
@@ -30,20 +30,23 @@ namespace FreshRoots.Models
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime HarvestDate { get; set; } = DateTime.Today;
 
-        
-        public string? FarmerId { get; set; }        // FK to AspNetUsers
-        [ForeignKey("FarmerId")]
-        public ApplicationUser? Farmer { get; set; }
+        [Required]
+        [ForeignKey("Farmer")]
+        public int FarmerId { get; set; }
 
+        [ValidateNever]   
+        public Farmer? Farmer { get; set; }
+
+        [ValidateNever]   
         public FarmerProfile FarmerProfile { get; set; } = new FarmerProfile();
     }
 
     public class FarmerProfile
     {
         [StringLength(120)]
-        public string FarmName { get; set; }
+        public string? FarmName { get; set; }   
 
         [StringLength(120)]
-        public string Certification { get; set; }
+        public string? Certification { get; set; }   // made nullable
     }
 }

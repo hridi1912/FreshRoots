@@ -196,155 +196,174 @@
                 background-color: #f8f9fa;
             }
 
-
         {
             display: none;
         }
-
-    
     </style>
 </head>
 <body>
-<div class="register-container">
-    <div class="row g-0">
-        <!-- LEFT SIDE -->
-        <div class="col-md-6 register-left">
-            <div class="logo">
-                <i class="fas fa-leaf me-2"></i>Fresh<span>Roots</span>
-            </div>
-            <h2>Join Our Community</h2>
-            <p>Connect with local farmers and get fresh produce directly to your doorstep.</p>
-            <div class="benefits-list mt-4">
-                <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fas fa-truck"></i></div>
-                    <div>
-                        <h5>Farm to Table</h5>
-                        <p>Fresh produce within 24 hours of harvest</p>
+    <div class="register-container">
+        <div class="row g-0">
+            <!-- LEFT SIDE -->
+            <div class="col-md-6 register-left">
+                <div class="logo">
+                    <i class="fas fa-leaf me-2"></i>Fresh<span>Roots</span>
+                </div>
+                <h2>Join Our Community</h2>
+                <p>Connect with local farmers and get fresh produce directly to your doorstep.</p>
+                <div class="benefits-list mt-4">
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-truck"></i></div>
+                        <div>
+                            <h5>Farm to Table</h5>
+                            <p>Fresh produce within 24 hours of harvest</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-leaf"></i></div>
+                        <div>
+                            <h5>100% Organic</h5>
+                            <p>Certified organic products without pesticides</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon"><i class="fas fa-heart"></i></div>
+                        <div>
+                            <h5>Support Local</h5>
+                            <p>Directly support local farmers and communities</p>
+                        </div>
                     </div>
                 </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fas fa-leaf"></i></div>
-                    <div>
-                        <h5>100% Organic</h5>
-                        <p>Certified organic products without pesticides</p>
-                    </div>
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div class="col-md-6 register-right">
+                <h2 class="mb-4 text-center">Create Your Account</h2>
+
+                @if (TempData["Message"] != null)
+                {
+                    <div class="alert alert-success">@TempData["Message"]</div>
+                }
+
+                <div class="social-login">
+                    <button type="button" class="social-btn">
+                        <i class="fab fa-google text-danger"></i> Google
+                    </button>
+                    <button type="button" class="social-btn">
+                        <i class="fab fa-facebook text-primary"></i> Facebook
+                    </button>
                 </div>
-                <div class="benefit-item">
-                    <div class="benefit-icon"><i class="fas fa-heart"></i></div>
-                    <div>
-                        <h5>Support Local</h5>
-                        <p>Directly support local farmers and communities</p>
-                    </div>
+
+                <div class="divider">
+                    <span class="divider-text">Or continue with email</span>
                 </div>
-            </div>
-        </div>
 
-        <!-- RIGHT SIDE -->
-        <div class="col-md-6 register-right">
-            <h2 class="mb-4 text-center">Create Your Account</h2>
-
-            @if (TempData["Message"] != null)
-            {
-                <div class="alert alert-success">@TempData["Message"]</div>
-            }
-
-            <div class="social-login">
-                <button type="button" class="social-btn">
-                    <i class="fab fa-google text-danger"></i> Google
-                </button>
-                <button type="button" class="social-btn">
-                    <i class="fab fa-facebook text-primary"></i> Facebook
-                </button>
-            </div>
-
-            <div class="divider">
-                <span class="divider-text">Or continue with email</span>
-            </div>
-
-            <form method="post" asp-action="Register">
+                <form method="post" asp-action="Register">
                     @Html.AntiForgeryToken()
-                <div class="mb-3">
-                    <label asp-for="FullName" class="form-label"></label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-user"></i></span>
-                        <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
-                    </div>
-                    <span asp-validation-for="FullName" class="text-danger"></span>
-                </div>
 
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label"></label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                        <input asp-for="Email" class="form-control" placeholder="Enter your email" />
-                    </div>
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label"></label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        <input asp-for="Password" class="form-control" placeholder="Create a password" />
-                    </div>
-                    <span asp-validation-for="Password" class="text-danger"></span>
-                    <div class="form-text">Must be at least 8 characters</div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="ConfirmPassword" class="form-label"></label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirm password" />
-                    </div>
-                    <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label">I want to join as a:</label>
-                    <div class="role-selector">
-                        <div class="role-option selected" data-role="Buyer">
-                            <div class="role-icon"><i class="fas fa-shopping-basket"></i></div>
-                            <h6>Buyer</h6>
-                            <p class="small">I want to buy fresh produce</p>
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
                         </div>
-                        <div class="role-option" data-role="Farmer">
-                            <div class="role-icon"><i class="fas fa-tractor"></i></div>
-                            <h6>Farmer</h6>
-                            <p class="small">I want to sell my products</p>
-                        </div>
+                        <span asp-validation-for="FullName" class="text-danger"></span>
                     </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input asp-for="Email" class="form-control" placeholder="Enter your email" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <!-- New Phone Number field -->
+                    <!-- Phone Number field (exactly 11 digits only) -->
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label">Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input asp-for="PhoneNumber"
+                                   class="form-control"
+                                   placeholder="Enter 11-digit phone number"
+                                   type="text"
+                                   inputmode="numeric"
+                                   pattern="\d{11}"
+                                   maxlength="11"
+                                   minlength="11"
+                                   required
+                                   oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,11);" />
+                        </div>
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        <div class="form-text text-muted">Must be exactly 11 digits</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input asp-for="Password" class="form-control" placeholder="Create a password" />
+                        </div>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                        <div class="form-text">Must be at least 8 characters</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirm password" />
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">I want to join as a:</label>
+                        <div class="role-selector">
+                            <div class="role-option selected" data-role="Buyer">
+                                <div class="role-icon"><i class="fas fa-shopping-basket"></i></div>
+                                <h6>Buyer</h6>
+                                <p class="small">I want to buy fresh produce</p>
+                            </div>
+                            <div class="role-option" data-role="Farmer">
+                                <div class="role-icon"><i class="fas fa-tractor"></i></div>
+                                <h6>Farmer</h6>
+                                <p class="small">I want to sell my products</p>
+                            </div>
+                        </div>
                         <input type="hidden" asp-for="Role" id="selectedRole" value="Buyer" />
-                </div>
+                    </div>
 
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="termsCheck" required>
-                    <label class="form-check-label" for="termsCheck">
-                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
-                    </label>
-                </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="termsCheck" required>
+                        <label class="form-check-label" for="termsCheck">
+                            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                        </label>
+                    </div>
 
-                <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
-                    <i class="fas fa-user-plus me-2"></i>Create Account
-                </button>
-            </form>
+                    <button type="submit" class="btn btn-primary w-100 py-2 mb-3">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </button>
+                </form>
 
-            <p class="text-center mb-0">
-                Already have an account? <a asp-controller="Auth" asp-action="Login" class="text-decoration-none">Sign In</a>
-            </p>
+                <p class="text-center mb-0">
+                    Already have an account? <a asp-controller="Auth" asp-action="Login" class="text-decoration-none">Sign In</a>
+                </p>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Role selection functionality
+    <script>
+        // Role selection functionality
         document.querySelectorAll('.role-option').forEach(option => {
-        option.addEventListener('click', function () {
-            document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
-            this.classList.add('selected');
-            document.getElementById('selectedRole').value = this.getAttribute('data-role');
+            option.addEventListener('click', function () {
+                document.querySelectorAll('.role-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('selectedRole').value = this.getAttribute('data-role');
+            });
         });
-    });
-</script>
+    </script>
 </body>
 </html>
