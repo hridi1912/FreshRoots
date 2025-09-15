@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace FreshRoots.Controllers
@@ -417,5 +418,60 @@ namespace FreshRoots.Controllers
                 carbonSaved = totalCarbonSaved
             });
         }
+
+        [Authorize(Roles = "Buyer")]
+        [HttpGet]
+        public async Task<IActionResult> CarbonFootprint()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var orders = await _db.Orders
+                .Where(o => o.BuyerId == userId && o.Status == "Delivered")
+                .Include(o => o.OrderItems)
+                .ToListAsync();
+
+            var totalItems = orders.Sum(o => o.OrderItems.Sum(i => i.Quantity));
+            var totalCarbonSaved = totalItems * 2; // Example
+
+            var vm = new CarbonfootprintViewModel
+            {
+                TotalCarbonSaved = totalCarbonSaved,
+                DeliveredOrdersCount = orders.Count,
+                TotalItems = totalItems
+            };
+
+            return PartialView("_CarbonFootprint", vm);
+        }
+
+        //[Authorize(Roles = "Buyer")]
+        //[HttpGet]
+        //public async Task<IActionResult> FavouriteFarmers()
+        //{
+        //    var userId = _userManager.GetUserId(User);
+
+        //    // Get delivered orders of this buyer
+        //    var deliveredOrders = await _db.Orders
+        //        .Where(o => o.BuyerId == userId && o.Status == "Delivered")
+        //        .Include(o => o.OrderItems)
+        //            .ThenInclude(oi => oi.Farmer)
+        //        .ToListAsync();
+
+        //    // Defensive: ignore items without Farmer
+        //    var favouriteFarmers = deliveredOrders
+        //        .SelectMany(o => o.OrderItems)
+        //        .Where(oi => oi.Farmer != null) // ✅ avoid null ref
+        //        .GroupBy(oi => oi.FarmerId)
+        //        .Where(g => g.Count() >= 2) // condition: ordered from this farmer 2+ times
+        //        .Select(g => new FavouriteFarmerViewModel
+        //        {
+        //            FarmerId = g.Key,
+        //            FarmerName = g.First().Farmer.FullName,
+        //            OrdersCount = g.Count()
+        //        })
+        //        .ToList();
+
+        //    return PartialView("_FavouriteFarmers", favouriteFarmers);
+        //}
+
     }
 }
